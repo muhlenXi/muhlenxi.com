@@ -2,6 +2,7 @@
 title: 关于我
 date: 2020-05-08 21:23:08
 comments: false
+donate: true
 ---
 
 
