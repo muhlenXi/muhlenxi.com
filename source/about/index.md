@@ -1,12 +1,18 @@
 ---
-title: 关于
+title: 关于我
 date: 2020-05-08 21:23:08
+comments: false
 ---
 
- <i class="fa fa-user"></i> Nickname: [muhlenXi](http://www.muhlenxi.com)
+
+
+muhlenXi（慕容席）<br>90后西北汉子<br><br>酷爱编码与 DIY<br/>现在是 iOS 攻城狮<br/><br/>乐天达观、成熟稳重。<br>坚信信仰只是个人内心的一种修行！
+
+你可以通过以下方式找到我：
+
+<i class="fa fa-user"></i> Nickname: [Wechat](http://www.muhlenxi.com)
  
 <i class="fa fa-envelope"></i> Email: [muhlenxi@163.com](http://wwww.muhlenxi.com)
   
 <i class="fa fa-github"></i> Github: [@muhlenXi](https://github.com/muhlenXi)
 
-muhlenXi，<br>90后北方汉子<br><br>热爱旅行与DIY，<br/>目前是一枚程序猿<br/><br/>乐天达观、成熟稳重。<br>认为信仰只是个人内心的一种修行！
