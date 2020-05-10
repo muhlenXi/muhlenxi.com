@@ -1,18 +1,12 @@
 ---
-title: 聊聊 Effective objective-C 2.0 
+title: Effective objective-C 2.0 
 date: 2015-11-10 14:52:41
 categories: 读书笔记
 tags: [Effective objective-C]
+donate: false
 ---
 
-
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-#### 前言：
-
-> Effective objective-C,翻译过来是编写高质量 iOS 与 OS X 代码的52个有效方法，作者是 Matt Galloway ，本书是世界级 C++ 开发大师 Scott Meyers 亲自担当顾问编辑的 “Effective Software Development Series” 系列丛书中的新作，Amazon 全五星评价。全书从语法、接口与API设计、内存管理、框架等7大方面总结和探讨了 Objective-C 编程中 52 个鲜为人知的和容易被忽视的特性和陷阱！
-
-学习贵在记录和总结收获！点击阅读全文了解更多！　　
+Effective objective-C, 翻译过来是编写高质量 iOS 与 OS X 代码的52个有效方法，作者是 Matt Galloway ，本书是世界级 C++ 开发大师 Scott Meyers 亲自担当顾问编辑的 “Effective Software Development Series” 系列丛书中的新作，Amazon 全五星评价。全书从语法、接口与API设计、内存管理、框架等7大方面总结和探讨了 Objective-C 编程中 52 个鲜为人知的和容易被忽视的特性和陷阱！　　
 
 <!-- more -->
 

@@ -3,19 +3,18 @@ title: 聊聊 Swift  Array
 date: 2018-07-23 15:44:49
 categories: iOS
 tags: [Swift, Array]
+donate: false
 ---
 
-
-### Array
-
-> 一种有序、随机访问的集合。
-
+Array 是一种有序、随机访问的集合。
 
 
 <!-- more -->
 
-Array 是 app 开发中经常使用的数据类型。一般用 array 来组织 app 中的数据，比如保存多个相同类型。一个 array 可以存储任何类型的元素，从整型到字符串再到类。
 
+### Array
+
+Array 是 app 开发中经常使用的数据类型。一般用 array 来组织 app 中的数据，比如保存多个相同类型。一个 array 可以存储任何类型的元素，从整型到字符串再到类。
 
 
 #### 创建 Array

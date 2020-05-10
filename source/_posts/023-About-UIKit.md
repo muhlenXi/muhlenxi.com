@@ -3,13 +3,10 @@ title: 聊聊 UIKit 框架
 date: 2017-02-01 11:20:19
 categories: iOS
 tags: [UIKit]
+donate: false
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> 本文是关于 UIKit 框架的描述。
+本文是关于 UIKit 框架的描述。
 
 <!-- more -->
 

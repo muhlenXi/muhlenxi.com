@@ -3,13 +3,11 @@ title: iOS BLE 开发小记[5] - 与 Remote Peripheral 交互的最佳实践
 date: 2017-05-05 11:45:00
 categories: iOS
 tags: [BLE]
+donate: false
+toc: true
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> 在这一节，主要是与 Remote Peripheral 交互的最佳实践，以及实际开发过程中应该注意的事项。
+在这一节，主要是与 Remote Peripheral 交互的最佳实践，以及实际开发过程中应该注意的事项。
 
 <!-- more -->
 

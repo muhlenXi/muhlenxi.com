@@ -3,11 +3,10 @@ title: 如何准确计算 UILabel or UITextView 的高度？
 date: 2018-08-18 07:55:53
 categories: iOS
 tags: [UILabel, UITextView]
+donate: false
 ---
 
-*版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-> 在 项目中有时会需要根据文本内容来动态改变控件的高度约束，常用的一般有 UILabel 和 UITextView，那如何准确根据文本内容计算该控件的高度呢？
+在 项目中有时会需要根据文本内容来动态改变控件的高度约束，常用的一般有 UILabel 和 UITextView，那如何准确根据文本内容计算该控件的高度呢？
 
 <!-- more -->
 

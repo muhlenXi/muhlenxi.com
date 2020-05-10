@@ -3,15 +3,10 @@ title: 使用 FMDB 管理 SQLite 数据库
 date: 2016-03-17 11:06:46
 categories: iOS
 tags: [FMDB, Objective-C]
+donate: false
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> FMDB 是一个面向对象的管理数据库的轻量级框架，它用 Obective-C 语言对数据库 SQLite 的 C 语言API 进行了封装，并且它对多线程的并发操作进行了处理，是线程安全的!
-
-　点击阅读全文来深入了解 FMDB 的如何使用。
+FMDB 是一个面向对象的管理数据库的轻量级框架，它用 Obective-C 语言对数据库 SQLite 的 C 语言API 进行了封装，并且它对多线程的并发操作进行了处理，是线程安全的!
 
 <!-- more -->
 

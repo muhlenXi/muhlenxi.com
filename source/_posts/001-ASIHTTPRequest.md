@@ -3,18 +3,14 @@ title: 聊聊 ASIHTTPRequest 的使用
 date: 2015-08-15 14:08:37
 categories: HowTo
 tags: [Objective-C, ASIHttpRequest]
+donate: false
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
+ASIHttpRequest 是一款及其强劲的 HTTP 访问开源项目，让简单的 API 完成复杂的功能，如：异步请求、队列请求、GZIP 压缩、缓存、断点续传、进度跟踪、上传文件、HTTP 认证，同时加入了 Objective-C 闭包 Block 的支持，让我们的代码更加灵活。
 
-### 导语：
+<!-- more -->
 
-> ASIHttpRequest 是一款及其强劲的 HTTP 访问开源项目，让简单的 API 完成复杂的功能，如：异步请求、队列请求、GZIP 压缩、缓存、断点续传、进度跟踪、上传文件、HTTP 认证，同时加入了 Objective-C 闭包 Block 的支持，让我们的代码更加灵活。
-
-　　由于 ASIHTTPRequest 是开源项目旧版本的库，没有适配 ARC 项目。所以对于目前之前 ARC 的工程来说，需要做适配。
-　　
-　　<!-- more -->
-
+由于 ASIHTTPRequest 是开源项目旧版本的库，没有适配 ARC 项目。所以对于目前之前 ARC 的工程来说，需要做适配。
 
 ### ASIHTTPRequest 的环境配置
 

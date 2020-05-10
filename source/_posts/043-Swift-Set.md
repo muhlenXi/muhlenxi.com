@@ -3,13 +3,10 @@ title: 聊聊 Swift  Set
 date: 2018-07-24 15:20:38
 categories: iOS
 tags: [Swift, Set]
+donate: false
 ---
 
-*版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 基本概念
-
-> Set 是包含唯一元素的无序集合。
+Set 是包含唯一元素的无序集合。
 
 <!-- more -->
 

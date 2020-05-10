@@ -1,14 +1,10 @@
 ---
-title: 聊聊 冒泡排序 （Bubble Sort）
+title: 冒泡排序 （Bubble Sort）
 date: 2019-06-19 22:22:53
 categories: 算法
 tags: [冒泡排序]
-description: 冒泡排序是一种看起来很形象的排序算法。
+donate: false
 ---
-
-版权声明：本文为 [muhlenXi](http://www.muhlenxi.com) 原创文章，未经博主允许不得转载，如有问题，欢迎指正。
-
-## Foreword
 
 [冒泡排序](https://zh.wikipedia.org/wiki/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F)（Bubble Sort）的排序方法是在每一轮排序过程中，依次比较相邻元素的大小，如果顺序不满足排序的要求，则交换这两个元素。这样第一轮排序结束后，则值最大的元素放到最后。
 

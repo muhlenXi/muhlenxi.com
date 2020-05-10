@@ -3,16 +3,10 @@ title: iOS Add PCH File
 date: 2017-03-09 16:23:38
 categories: iOS
 tags: [PCH File]
+donate: false
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> pch 文件是APP项目中的一个头文件，该文件中的内容能被项目中的其他源文件共享和访问，是一个预编译文件。
-> 
-> 软件版本：Xcode 8.2.1
-
+pch 文件是APP项目中的一个头文件，该文件中的内容能被项目中的其他源文件共享和访问，是一个预编译文件。
 　
 <!-- more -->
 　　

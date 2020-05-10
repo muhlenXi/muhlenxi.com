@@ -3,10 +3,11 @@ title: 我为什么要开始写博客？
 date: 2015-09-02 11:00:32
 categories: Life
 tags: [生活]
+donate: false
 ---
 
 
-　　*想满足好奇心就进来看看吧。*
+想满足好奇心就进来看看吧。
 
 <!-- more -->
 

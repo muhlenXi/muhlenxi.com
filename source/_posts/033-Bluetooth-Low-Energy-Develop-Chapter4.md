@@ -3,13 +3,11 @@ title: iOS BLE 开发小记[4] - 如何实现 CoreBluetooth 后台运行模式
 date: 2017-05-03 10:45:00
 categories: iOS
 tags: [BLE]
+donate: false
+toc: true
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> 在这一节，主要是 iOS APP 关于蓝牙后台处理方面的知识和经验。
+在这一节，主要是 iOS APP 关于蓝牙后台处理方面的知识和经验。
 
 <!-- more -->
 

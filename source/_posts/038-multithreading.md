@@ -5,13 +5,7 @@ categories: iOS
 tags: [pThread, NSThread, GCD, NSOperation]
 ---
 
-*本文是 muhlenXi 原创文章，欢迎转载，转载请注明出处。*
-
-## Overview
-
-> 本文主要是关于 iOS 多线程开发中的知识总结，以及在实际项目中的用法和注意事项。
-
-Stay Hungry, Stay Foolish.
+本文主要是关于 iOS 多线程开发中的知识总结，以及在实际项目中的用法和注意事项。
 
 <!-- more -->
 

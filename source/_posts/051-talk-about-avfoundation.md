@@ -1,14 +1,12 @@
 ---
-title: 聊聊 AVFoundation 视频编辑
+title: AVFoundation 视频编辑
 date: 2019-07-24 08:21:41
 categories: iOS
 tags: [AVFoundation]
-description: AVFoundation 框架是一个用来播放和创建音视频的框架，它提供了一系列 Objective-C 接口让我们操作音视频的细节数据。
+toc: true
+donate: false
 ---
 
-版权声明：本文为 [muhlenXi](http://www.muhlenxi.com) 原创文章，未经博主允许不得转载，如有问题，欢迎指正。
-
-## Foreword
 
 AVFoundation 框架是一个用来播放和创建音视频的框架，它提供了一系列 Objective-C 接口让我们操作音视频的细节数据，比如测试、编辑、重编码视频文件和从设备中获取音视频数据等。
 

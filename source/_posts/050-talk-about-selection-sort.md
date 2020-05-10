@@ -1,18 +1,17 @@
 ---
-title: 聊聊 选择排序 (Selection Sort)
+title: 选择排序 (Selection Sort)
 date: 2019-06-25 22:47:57
 categories: 算法
 tags: [选择排序]
-description: 选择排序是一种简单直观的排序算法，总的原则就是依次找到想要的元素然后交换。
+donate: false
 ---
 
-版权声明：本文为 [muhlenXi](http://www.muhlenxi.com) 原创文章，未经博主允许不得转载，如有问题，欢迎指正。
+选择排序是一种简单直观的排序算法，总的原则就是依次找到想要的元素然后交换。
 
-## Preface
+<!--more-->
 
 排序就是将一组对象按照某种逻辑顺序重新排列的过程。比如根据数值的大小升序或降序排序。
 
-<!--more-->
 
 # 选择排序
 

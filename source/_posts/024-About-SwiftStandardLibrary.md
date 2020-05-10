@@ -1,15 +1,12 @@
 ---
-title: App Frameworks 之 Swift Standard Library
+title: Swift Standard Library
 date: 2017-02-15 11:20:19
 categories: iOS
 tags: [Swift Standard Library]
+donate: false
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> 本文是关于 Swift Standard Library 的描述。
+本文是关于 Swift Standard Library 的描述。
 
 <!-- more -->
 

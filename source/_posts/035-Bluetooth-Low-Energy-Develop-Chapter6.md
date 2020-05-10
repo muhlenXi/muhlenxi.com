@@ -3,13 +3,11 @@ title: iOS BLE 开发小记[6] - 设置本地设备为 Peripheral 的最佳实�
 date: 2017-05-07 12:45:00
 categories: iOS
 tags: [BLE]
+donate: false
+toc: true
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> 在这篇文章中，主要是将你的本地设备设置为一个广播数据的 Peripheral 的最佳实践，以及实际开发过程中应该注意的事项。
+在这篇文章中，主要是将你的本地设备设置为一个广播数据的 Peripheral 的最佳实践，以及实际开发过程中应该注意的事项。
 
 <!-- more -->
 

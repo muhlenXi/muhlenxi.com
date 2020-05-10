@@ -3,14 +3,10 @@ title: 聊聊  Foundation 框架
 date: 2017-01-20 10:20:19
 categories: iOS
 tags: [Foundation]
+donate: false
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> 学习软件开发最好的方式就是去努力学好英语，然后去看官方的第一手资料 - 软件开发指南。
-> 本文是关于 Foundation 框架的描述。
+学习软件开发最好的方式就是去努力学好英语，然后去看官方的第一手资料 - 软件开发指南。本文是关于 Foundation 框架的描述。
 
 <!-- more -->
 

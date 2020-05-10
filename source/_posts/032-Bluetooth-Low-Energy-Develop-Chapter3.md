@@ -3,13 +3,11 @@ title: iOS BLE 开发小记[3] - 如何实现一个 Local Peripheral
 date: 2017-05-01 10:45:00
 categories: iOS
 tags: [BLE]
+toc: true
+donate: false
 ---
 
- *版权声明：本文为 muhlenXi 原创文章，欢迎转载，转载请注明来源。*
-
-### 导语：
-
-> 在这一节，你将会学到，如何通过 CoreBluetooth 框架来实现 Local Peripheral 方面的功能和代理方法。 
+在这一节，你将会学到，如何通过 CoreBluetooth 框架来实现 Local Peripheral 方面的功能和代理方法。 
 
 <!-- more -->
 
