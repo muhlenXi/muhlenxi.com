@@ -5,8 +5,8 @@
 # Site
 title: muhlenXi's Blog
 subtitle:  Stay Hungry, Stay Foolish.
-description: 他最大的快乐一直来自学习本身。
-keywords: muhlenXi
+description: muhlenXi 的博客
+keywords: muhlenXi, muhlenxi, 慕容席
 author: muhlenXi
 language: zh-CN
 timezone: ''
@@ -34,6 +34,7 @@ skip_render:
 # Writing
 new_post_name: :title.md # File name of new posts
 default_layout: post
+auto_spacing: true # 在中文和英文之间加入空格
 titlecase: false # Transform title into titlecase
 external_link:
   enable: true # Open external links in new tab
@@ -62,7 +63,7 @@ index_generator:
   order_by: -date
 
 # Category & Tag
-default_category: uncategorized
+default_category: iOS # 默认分类
 category_map:
 tag_map:
 
