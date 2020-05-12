@@ -1,6 +1,7 @@
 ---
-title: iOS开发图片那些事儿
+title: iOS UIImage 使用记录
 date: 2016-09-30 14:17:09
+toc: true
 categories: iOS
 tags: [UIImage]
 donate: false
@@ -9,6 +10,21 @@ donate: false
 APP 开发中，一些 UI 界面的设计常常涉及到 UIImageView 的使用，这和图片是分不开的，随着开发的渐渐深入，要记住的东西越来越多，但我是一个懒人，暂且就把关于图片的知识就放这儿吧。
 
 <!-- more -->
+
+
+### UIImage 代码
+
+1、防止图片拉伸变形
+
+```swift
+let image = UIImage(named: "hello").stretchableImage(withLeftCapWidth: 2, topCapHeight: 0)
+```
+
+2、防止图片被渲染成蓝色
+
+```swift
+let image = UIImage(named: "hello").withRenderingMode(.alwaysOriginal))
+```
 
 ### iPhone 尺寸规格
 
@@ -73,7 +89,4 @@ APP 开发中，一些 UI 界面的设计常常涉及到 UIImageView 的使用�
 | ad5@2x.png  | @2x      | 640x1136    |
 | ad6@2x.png  | @2x      | 750x1334    |
 | ad6P@3x.png | @3x      | 1242x2208   |
-
-
-*本文会不间断更新，如有问题，可以留言给我！最后谢谢阅读！*
 
