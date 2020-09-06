@@ -63,7 +63,8 @@ Unix 的哲学是 『没有消息就是好消息』，没有消息则说明指�
 | git push origin master | 推送 commit 记录到远端 master 分支 |
 | git push origin master --tags  | 推送 commit 记录和 tag 到远端 master 分支 |
 | git push origin -d 远端分支名   |  删除远端分支 | 
-| git clone -b 分支名  |  clone 指定分支 | 
+| git clone 仓库地址  |  clone master 分支代码 |
+| git clone -b 分支名 仓库地址  |  clone 指定分支代码 | 
 | git rebase 分支名| 将当前分支的提交记录追加到指定分支后 |
 | git rebase -i HEAD~n|合并当前分支最后 n 个 commit 为一个 commit|
 
