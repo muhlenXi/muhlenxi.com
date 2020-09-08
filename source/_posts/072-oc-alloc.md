@@ -1,10 +1,10 @@
 ---
-title: 探究 alloc 做了啥 
+title: 底层探索 - 探究 alloc 做了啥 
 toc: true
 donate: false
 tags: [alloc]
 date: 2020-09-05 22:07:25
-categories: [源码]
+categories: [底层探索]
 ---
 
 没有对象怎么办？new 一个，在 Objective-C 中我们可以通过 alloc 或 new 创建一个对象，那么问题来了？它底层是怎么实现的呢？
