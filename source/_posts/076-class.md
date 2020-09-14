@@ -13,7 +13,6 @@ categories: [底层探索]
 
 ## 必要知识
 
-
 在前篇的探索 [揭开 isa 的神秘面纱](https://www.muhlenxi.com/2020/09/10/075-isa/) 中，我们了解到每个类都有一个 isa，里面存储了该对象所属的类的信息。并且找到了对象和类在 C/C++ 层面的实现。
 
 ```c
@@ -50,7 +49,7 @@ typedef struct objc_class *Class;
 
 ## 探究 『继承』
 
-在 objc_class 中有个属性 superclass, 我们探究下 superclass 的继承体系。
+在 objc_class 中有个属性 superclass, 我们先探究下 superclass 的继承体系。
 
 如下，我们分别定义了两个类，RDPerson 继承于 NSObject，RDTeacher 继承于 RDPerson 。
 
@@ -109,7 +108,7 @@ Men
 Earth
 ```
 
-接下来探索 isa 中的类对象的信息。用 `p/x` 打印出当前对象归属的 RDTeacher 类的地址 A（16进制）。
+接下来探索 isa 中的类对象的信息。用 `p/x` 打印出当前对象归属的 RDTeacher 类的地址 A（16进制）, 也就是当前对象中的 isa 中 shiftcls 的数据。
 
 ```c
 (lldb) p/x 0x001d800100003465 & 0x00007ffffffffff8ULL
@@ -147,6 +146,7 @@ NSObject
 (lldb) x/4gx  0x00000001003f1140
 0x1003f1140: 0x00000001003f10f0 0x0000000000000000
 0x1003f1150: 0x00000001016120c0 0x0001801000000003
+
 (lldb) po 0x0000000000000000
 <nil>
 ```
@@ -163,6 +163,7 @@ NSObject
 ```c
 (lldb) p t
 (RDTeacher *) $81 = 0x0000000101612260
+
 (lldb) x/4gx 0x0000000101612260
 0x101612260: 0x001d800100003465 0x0000000100002058
 0x101612270: 0x0000000100002078 0x0000000100002098
@@ -180,7 +181,9 @@ RDTeacher
 
 所以对象 t 的 isa 指向的类是 RDTeacher 类。接下来我们探索 RDTeacher 的 isa 指向的是啥。
 
-先用 `x/4gx` 读出内存 `0x0000000100003460` 内容，然后用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出 RDTeacher 类对象所属的类的地址。最后用 `x/4gx` 读取这个地址中的内容，用 po 打印当前 isa 中的类。类对象所属的类称为 `元类`（metaclass）。
+先用 `x/4gx` 读出内存 `0x0000000100003460` 内容，然后用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出 RDTeacher 类对象所属的类的地址。
+
+最后用 `x/4gx` 读取这个地址中的内容，用 po 打印当前 isa 中的类。类对象所属的类称为 `元类`（meta class）。
 
 ```c
 (lldb) x/4gx 0x0000000100003460
@@ -192,6 +195,7 @@ RDPerson
 
 (lldb) p/x 0x0000000100003438 & 0x00007ffffffffff8ULL
 (unsigned long long) $107 = 0x0000000100003438
+
 (lldb) po 0x0000000100003438
 RDTeacher
 ```
@@ -211,8 +215,10 @@ RDTeacher
 (lldb) x/4gx 0x0000000100003438
 0x100003438: 0x00000001003f10f0 0x00000001000034d8
 0x100003448: 0x0000000101204690 0x0004e03500000007
+
 (lldb) p/x 0x00000001003f10f0 & 0x00007ffffffffff8ULL
 (unsigned long long) $112 = 0x00000001003f10f0
+
 (lldb) po 0x00000001003f10f0
 NSObject
 ```
@@ -231,7 +237,7 @@ NSObject
 (Class) $116 = 0x00000001003f10f0
 ```
 
-此时得到的这个值是和 `0x00000001003f10f0` 是相等的。说明 `元类 RDTeacher` 的 isa 指向的是 NSObject 的元类，这个元类称之为根元类（root metaclass）。
+此时得到的这个值是和 `0x00000001003f10f0` 是相等的。说明 `元类 RDTeacher` 的 isa 指向的是 NSObject 的元类，这个元类称之为根元类（root meta class）。
 
 最后我们看看根源类的 superclass 和 isa 指向哪里？用 `x/4gx` 查看下 `0x00000001003f10f0` 地址的内容。
 
@@ -241,7 +247,7 @@ NSObject
 0x1003f1100: 0x0000000101018bd0 0x0005e03100000007
 ```
 
-我们先看看 superclass 是啥？
+我们先看看 NSObject 根元类的 superclass 是啥？
 
 ```
 (lldb) po 0x00000001003f1140
@@ -260,7 +266,7 @@ NSObject
 NSObject
 ```
 
-`0x00000001003f10f0` 这个地址和根源类的地址是一样的，也就是说根元类的 isa 指向了自己本身。
+`0x00000001003f10f0` 这个地址和根元类的地址是一样的，也就是说根元类的 isa 指向了自己本身。
 
 根据以上的探索，我们可以得出一个完整的 isa 指向图。
 
@@ -487,6 +493,220 @@ struct protocol_list_t {
 
 ![](https://raw.githubusercontent.com/muhlenxi/blog-images/master/imgobjcClassMindnode.png)
 
+现在我们用 lldb 调试的方式，验证下 RDTeacher 类中的属性和方法的存储位置。让代码运行到图一的那个断点处。首先找到类对象的地址。
+
+```c
+(lldb) p/x [RDTeacher class]
+(Class) $0 = 0x00000001000034f0 RDTeacher
+```
+
+ 用 `x/8gx` 读出该地址起始的 8 段数据。
+ 
+ ```c
+ (lldb) x/8gx 0x00000001000034f0
+0x1000034f0: 0x00000001000034c8 0x0000000100003590
+0x100003500: 0x0000000101856a40 0x0002802c00000007
+0x100003510: 0x0000000101856654 0x00000001003350f0
+0x100003520: 0x00000001003350f0 0x000000010032f410
+ ```
+
+第一个 8 字节数据 `0x00000001000034c8` 是 isa，第二个 8 字节数据是 superclass，第三个数据存储的是 cache, `cache_t` 是一个 struct，通过对 struct 中属性的分析，可以得出 cache 占用 16 个字节大小。所以地址 `0x100003500` 起始的 16 个字节中存储的 cache。
+
+第四个数据是 bits，它的类型是 `class_data_bits_t`，`class_data_bits_t` 是一个 struct，其内部只有一个 uintptr_t 类型的 bits 数据，所以 bits 占用 8 个字节大小。所以地址 `0x100003510` 起始的 8 个字节中存储的是 bits 数据。
+
+用 `p/x` 打印出 bits 数据的地址。
+
+```c
+(lldb) p (class_data_bits_t*) 0x100003510
+(class_data_bits_t *) $2 = 0x0000000100003510
+```
+
+调用 `data()` 方法得到 `class_rw_t` 类型的数据。
+
+```c
+(lldb) p $2 -> data()
+(class_rw_t *) $3 = 0x0000000101856650
+```
+
+此时我们得到的是 `class_rw_t` 类型的指针，通过运算符 `*` 取出地址中的数据。
+
+```c
+(lldb) p *$3
+(class_rw_t) $4 = {
+  flags = 2148007936
+  witness = 1
+  ro_or_rw_ext = {
+    std::__1::atomic<unsigned long> = 4294980136
+  }
+  firstSubclass = nil
+  nextSiblingClass = nil
+}
+```
+
+调用 `class_rw_t` 中的 `properties()` 方法得到属性列表。
+
+```c
+(lldb) p $4.properties()
+(const property_array_t) $5 = {
+  list_array_tt<property_t, property_list_t> = {
+     = {
+      list = 0x00000001000031f0
+      arrayAndFlag = 4294980080
+    }
+  }
+}
+```
+
+遍历属性列表中的元素，看看是否有 name，hobby，address 这三个属性。
+
+```c
+(lldb) p $5.list->get(0)
+(property_t) $8 = (name = "name", attributes = "T@\"NSString\",C,N,V_name")
+
+(lldb) p $5.list->get(1)
+(property_t) $9 = (name = "hobby", attributes = "T@\"NSString\",C,N,V_hobby")
+
+(lldb) p $5.list->get(2)
+(property_t) $10 = (name = "address", attributes = "T@\"NSString\",C,N,V_address")
+
+(lldb) p $5.list->get(3)
+Assertion failed: (i < count), function get, file /Users/muhlenxi/xiyinjun/objc-runtime/objc4-781/runtime/objc-runtime-new.h, line 438.
+```
+
+当我们取第四个属性的时候，发生了数组越界操作，崩溃了。因为 RDTeacher 中一共定义了 3 个 属性。
+
+调用 `class_rw_t` 中的 `methods()` 方法得到方法列表。
+
+```c
+(lldb) p $4.methods()
+(const method_array_t) $11 = {
+  list_array_tt<method_t, method_list_t> = {
+     = {
+      list = 0x00000001000030c0
+      arrayAndFlag = 4294979776
+    }
+  }
+}
+```
+
+遍历方法列表中的元素，看看有哪些方法呢？
+
+```c
+(lldb) p $11.list->get(0)
+(method_t) $14 = {
+  name = "sayByebye"
+  types = 0x0000000100001f87 "v16@0:8"
+  imp = 0x00000001000016c0 (HelloWorld`-[RDTeacher sayByebye] at RDTeacher.m:17)
+}
+
+(lldb) p $11.list->get(1)
+(method_t) $15 = {
+  name = "hobby"
+  types = 0x0000000100001f8f "@16@0:8"
+  imp = 0x0000000100001760 (HelloWorld`-[RDTeacher hobby] at RDTeacher.h:16)
+}
+(lldb) p $11.list->get(2)
+(method_t) $16 = {
+  name = "setHobby:"
+  types = 0x0000000100001f97 "v24@0:8@16"
+  imp = 0x0000000100001790 (HelloWorld`-[RDTeacher setHobby:] at RDTeacher.h:16)
+  
+(lldb) p $11.list->get(3)
+(method_t) $17 = {
+  name = ".cxx_destruct"
+  types = 0x0000000100001f87 "v16@0:8"
+  imp = 0x0000000100001840 (HelloWorld`-[RDTeacher .cxx_destruct] at RDTeacher.m:11)
+}
+
+(lldb) p $11.list->get(4)
+(method_t) $18 = {
+  name = "name"
+  types = 0x0000000100001f8f "@16@0:8"
+  imp = 0x00000001000016f0 (HelloWorld`-[RDTeacher name] at RDTeacher.h:15)
+}
+(lldb) p $11.list->get(5)
+(method_t) $19 = {
+  name = "setName:"
+  types = 0x0000000100001f97 "v24@0:8@16"
+  imp = 0x0000000100001720 (HelloWorld`-[RDTeacher setName:] at RDTeacher.h:15)
+}
+
+(lldb) p $11.list->get(6)
+(method_t) $20 = {
+  name = "address"
+  types = 0x0000000100001f8f "@16@0:8"
+  imp = 0x00000001000017d0 (HelloWorld`-[RDTeacher address] at RDTeacher.h:17)
+}
+(lldb) p $11.list->get(7)
+(method_t) $21 = {
+  name = "setAddress:"
+  types = 0x0000000100001f97 "v24@0:8@16"
+  imp = 0x0000000100001800 (HelloWorld`-[RDTeacher setAddress:] at RDTeacher.h:17)
+}
+
+(lldb) p $11.list->get(8)
+Assertion failed: (i < count), function get, file /Users/muhlenxi/xiyinjun/objc-runtime/objc4-781/runtime/objc-runtime-new.h, line 438.
+error: Execution was interrupted, reason: signal SIGABRT.
+The process has been returned to the state before expression evaluation.  
+```
+
+通过上面的打印，可以看出方法列表中不仅有我们定义的 `sayByebye` 方法，还有编译器生成的 name，hobby，address 这三个属性的 setter 和 getter 方法，没有找到我们定义的 `sayStandUp` 方法，这是为什么呢？
+
+`sayStandUp` 是类方法，存储在 `RDTeacher` 的元类中，同理，按照上面的思路，我们看看元类中的 methods 列表。
+
+```c
+(lldb) p object_getClass(RDTeacher.class)
+(Class) $2 = 0x00000001000034c8
+
+(lldb) x/8gx 0x00000001000034c8
+0x1000034c8: 0x00000001003350f0 0x0000000100003568
+0x1000034d8: 0x0000000103274dc0 0x0002e03500000007
+0x1000034e8: 0x0000000103274724 0x00000001000034c8
+0x1000034f8: 0x0000000100003590 0x0000000103274d40
+
+(lldb) p (class_data_bits_t*) 0x1000034e8
+(class_data_bits_t *) $3 = 0x00000001000034e8
+
+(lldb) p $3 -> data()
+(class_rw_t *) $4 = 0x0000000103274720
+
+(lldb) p *$4
+(class_rw_t) $5 = {
+  flags = 2684878849
+  witness = 1
+  ro_or_rw_ext = {
+    std::__1::atomic<unsigned long> = 4294979704
+  }
+  firstSubclass = nil
+  nextSiblingClass = nil
+}
+
+(lldb) p $5.methods()
+(const method_array_t) $6 = {
+  list_array_tt<method_t, method_list_t> = {
+     = {
+      list = 0x0000000100003058
+      arrayAndFlag = 4294979672
+    }
+  }
+}
+
+(lldb) p $6.list->get(0)
+(method_t) $7 = {
+  name = "sayStandUp"
+  types = 0x0000000100001f87 "v16@0:8"
+  imp = 0x0000000100001690 (HelloWorld`+[RDTeacher sayStandUp] at RDTeacher.m:13)
+}
+
+(lldb) p $6.list->get(1)
+Assertion failed: (i < count), function get, file /Users/muhlenxi/xiyinjun/objc-runtime/objc4-781/runtime/objc-runtime-new.h, line 438.
+error: Execution was interrupted, reason: signal SIGABRT.
+The process has been returned to the state before expression evaluation.
+```
+
+methods 列表中第一个方法就是 `sayStandUp`，符合我们的预期。
+
+今天的图，值得仔细揣摩，或许你能得出一些关于人生的大道理。
 
 ## 后记
 

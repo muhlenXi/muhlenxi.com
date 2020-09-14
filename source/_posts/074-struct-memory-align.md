@@ -33,7 +33,11 @@ printf("float  -> %lu \n", sizeof(e));
 printf("double -> %lu \n", sizeof(f));
 ```
 
-运行上面的代码，我们可以得到基本数据类型的内存占用大小。
+The sizeof operator yields an integer equal to the size of the specified object or type in bytes. 
+
+`sizeof` 是一个关键字，是一个编译时运算符，用于判断变量或数据类型的字节大小。
+
+运行上面的代码，我们可以得到基本数据类型的内存占用字节大小。
 
 ```c
 char   -> 1 
@@ -64,7 +68,7 @@ struct B {
 };
 ```
 
-上面我们定义了结构体 A 和 B，我们用 sizeof 来分别计算它们的内存占用大小，你猜猜会是什么呢？
+上面我们定义了结构体 A 和 B，我们用 sizeof 来分别计算它们的内存占用字节大小，你猜猜会是什么呢？
 
 ```c
 struct A sa;
@@ -84,17 +88,17 @@ b size -> 32
 
 ### 原则一
 
-这就引出了内存对齐的第一个原则。
+接下来我们看看这个 struct 内存占用大小是如何计算出来的。这就引出了内存对齐的第一个原则。
 
 > 原则一：结构体中的元素是按照定义的顺序一个一个放到内存中去的，不是我们想的紧密排列的那样。从结构体存储的首地址开始，每个元素放到内存中时，都是以当前元素的大小来划分的，因此一定是放到地址是当前元素的整数倍上的。（以结构体变量首地址为 0 开始计算）
 
 ```c
 struct A {
-    int a; // [0123]
-    char b; // [4]
-    short c; // 5[67]
-    long d;  // [8,9,10,11,12,13,14,15]
-    char e;  // [16]
+    int a;      // [0123]
+    char b;     // [4]
+    short c;    // 5[67]
+    long d;     // [8,9,10,11,12,13,14,15]
+    char e;     // [16]
 };
 ```
 
@@ -110,11 +114,11 @@ struct A {
 
 ```c
 struct B {
-    char b; // [0]
-    int a;  // 123[4567]
-    short c; // [89]
-    long d;  // 10,11,12,13,14,15 [16,17,18,19,20,21,22,23]
-    char e;  // [24]
+    char b;    // [0]
+    int a;     // 123[4567]
+    short c;   // [89]
+    long d;    // 10,11,12,13,14,15 [16,17,18,19,20,21,22,23]
+    char e;    // [24]
 };
 ```
 
@@ -168,22 +172,22 @@ struct B 根据原则一计算的是 25，不满足原则二，要补全对齐�
 
 ```c
 struct RDPoint {
-    long x; // [0...7]
-    char y;   // [9]
-}; // 16
+    long x;    // [0...7]
+    char y;    // [9]
+};  // 16
 
 struct RDPoint1 {
-    int x; // [0...3]
-    char y; // [4]
-}; // 8
+    int x;     // [0...3]
+    char y;    // [4]
+};  // 8
 
 
 struct A {
-    char a; // 0
-    struct RDPoint point; // [8...23]
-    struct RDPoint1 point1;// [24...31]
-    char b; // [32]
-}; // 40
+    char a;                    // 0
+    struct RDPoint point;      // [8...23]
+    struct RDPoint1 point1;    // [24...31]
+    char b;                    // [32]
+};  // 40
 ```
 
 猜猜下面的代码会输出什么？
@@ -232,11 +236,3 @@ a -> 0, point -> 8, point1 -> 24, b -> 32
 如果你能弄懂了这三个原则，那么 struct 的内存占用大小问题应该就一清二楚了。
 
 我是穆哥，卖码维生的一朵浪花。我们下次见。
-
-
-
-
-
-
-
-
