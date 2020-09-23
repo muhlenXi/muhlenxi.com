@@ -1,5 +1,5 @@
 ---
-title: 『底层探索』7 - Objective-C 中的方法调用流程
+title: 『底层探索』7 - OC 消息发送流程之快速查找
 toc: true
 donate: false
 tags: []
@@ -162,10 +162,10 @@ RDStudent: Go to school every day!
 在 runtime 源码中，我们找到了`objc_msgSend` 的实现（ ARM64指令集架构的 ）, 对主要流程，我也添加了相关注释。
 
 ```armasm
-	ENTRY _objc_msgSend
+ENTRY _objc_msgSend
 	UNWIND _objc_msgSend, NoFrame
 
-	cmp	p0, #0			                    // nil check and tagged pointer check，检查消息接收对象是否是 nil 和支持 taggedPointer
+	cmp	p0, #0			               		// nil check and tagged pointer check，检查消息接收对象是否是 nil 和支持 taggedPointer
 #if SUPPORT_TAGGED_POINTERS
 	b.le	LNilOrTagged		            //  (MSB tagged pointer looks negative) 如果支持 taggedPointer，则跳转 LNilOrTagged
 #else
@@ -224,7 +224,7 @@ LReturnZero:                                // 返回值清零后返回
 .macro CacheLookup
 LLookupStart$1:
 
-	// p1 = SEL, p16 = isa
+																	// p1 = SEL, p16 = isa
 	ldr	p11, [x16, #CACHE]				                            // p11 = mask|buckets
 
 #if CACHE_MASK_STORAGE == CACHE_MASK_STORAGE_HIGH_16
@@ -266,8 +266,6 @@ LLookupStart$1:
 #error Unsupported cache mask storage for ARM64.
 #endif
 
-	// Clone scanning loop to miss instead of hang when cache is corrupt.
-	// The slow path may detect any corruption and halt later.
 
 	ldp	p17, p9, [x12]	                                        	// {imp, sel} = *bucket
 1:	cmp	p9, p1			                                            // 判断 bucket->sel == _cmd
