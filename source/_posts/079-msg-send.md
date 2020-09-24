@@ -14,10 +14,6 @@ categories: [底层探索]
 
 ## 基础知识
 
-<<<<<<< HEAD
-[Objective-C](https://zh.wikipedia.org/wiki/Objective-C) 是一门动态语言，也就是说在编译时无法确定方法的实现，在运行的时候才能确定。当你定义一个方法而没有实现时，在编译时是不会报错的。所有的方法在运行时才会处理，当无法处理时，程序会抛出异常。在底层是通过 [runtime](https://developer.apple.com/documentation/objectivec/objective-c_runtime) 来提供支持的。
-
-=======
 [Objective-C](https://zh.wikipedia.org/wiki/Objective-C) 是一门动态语言，也就是说在编译时无法确定类、属性和方法的实现，在运行的时候才能确定。当你定义一个方法而没有实现时，在编译时是不会报错的。所有的方法在运行时才会处理，当无法处理时，程序会抛出异常。而所有的这一切都是通过 [runtime](https://developer.apple.com/documentation/objectivec/objective-c_runtime) 来提供支持的。runtime 于 Objective-C 就好比生命离不开水一样。
 
 ### 交互方式
@@ -29,7 +25,6 @@ categories: [底层探索]
 第 **2** 种是通过 NSObject 来调用，因为我们所有的 class 都是继承于 NSObject，那么 NSObject 中的调用 runtime 的方法，我们也可以用。比如 `isKindOfClass`, `isMemberOfClass`, `methodForSelector` 等。
 
 第 **3** 种直接是调用 `runtime` 对外提供的 API，具体哪些 API 可以看这里 [API List](https://developer.apple.com/documentation/objectivec/objective-c_runtime)。
->>>>>>> 36f3f0d510bfbede4071e8e5a3601d61a7c4e35f
 
 ## 初探
 
@@ -167,17 +162,11 @@ RDStudent: Go to school every day!
 在 runtime 源码中，我们找到了`objc_msgSend` 的实现（ ARM64指令集架构的 ）, 对主要流程，我也添加了相关注释。
 
 ```armasm
-<<<<<<< HEAD
 	ENTRY _objc_msgSend
 	UNWIND _objc_msgSend, NoFrame
 
 	cmp	p0, #0			                    // nil check and tagged pointer check，检查消息接收对象是否是 nil 和支持 taggedPointer
-=======
-ENTRY _objc_msgSend
-	UNWIND _objc_msgSend, NoFrame
 
-	cmp	p0, #0			               		// nil check and tagged pointer check，检查消息接收对象是否是 nil 和支持 taggedPointer
->>>>>>> 36f3f0d510bfbede4071e8e5a3601d61a7c4e35f
 #if SUPPORT_TAGGED_POINTERS
 	b.le	LNilOrTagged		            //  (MSB tagged pointer looks negative) 如果支持 taggedPointer，则跳转 LNilOrTagged
 #else
@@ -236,11 +225,7 @@ LReturnZero:                                // 返回值清零后返回
 .macro CacheLookup
 LLookupStart$1:
 
-<<<<<<< HEAD
 	// p1 = SEL, p16 = isa
-=======
-																	// p1 = SEL, p16 = isa
->>>>>>> 36f3f0d510bfbede4071e8e5a3601d61a7c4e35f
 	ldr	p11, [x16, #CACHE]				                            // p11 = mask|buckets
 
 #if CACHE_MASK_STORAGE == CACHE_MASK_STORAGE_HIGH_16
