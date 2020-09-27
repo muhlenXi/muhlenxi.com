@@ -1,5 +1,5 @@
 ---
-title: 聊聊 常见十大排序
+title: 你知道这 10 种排序方法么？
 toc: true
 donate: false
 tags: []

@@ -11,4 +11,7 @@ categories:
 
 <!-- more -->
 
+## 目录
 
+[1、你知道这 10 种排序方法么？](https://www.muhlenxi.com/2020/04/20/069-talk-about-sort/)
+[2、用 Swift 实现 LRU 缓存策略](https://www.muhlenxi.com/2020/09/27/083-lru/)
