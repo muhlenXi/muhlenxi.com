@@ -23,4 +23,6 @@ categories:
 - [『底层探索』7 - OC 消息发送流程之快速查找](https://www.muhlenxi.com/2020/09/20/079-msg-send/)
 - [『底层探索』8 - OC 消息发送流程之慢速查找](https://www.muhlenxi.com/2020/09/23/080-msg-send-slow-find/)
 - [『底层探索』9 - OC 消息发送流程之消息转发](https://www.muhlenxi.com/2020/09/24/081-msg-forward/)
+- [『底层探索』10 - Mach-O 文件分析](https://www.muhlenxi.com/2020/09/28/084-mach-o/)
+- [『底层探索』11 - iOS App 启动流程分析一](https://www.muhlenxi.com/2020/09/29/085-dyld/)
 
