@@ -13,7 +13,7 @@ categories: [底层探索]
 
 ### overview
 
-在 iOS 开发中，当我们创建一个类的实例的时候，会不假思索的使用如下的代码来创建对象。
+在 iOS 开发中，当我们创建一个类的实例的时候，会不假思索的使用以下两种来创建对象。
 
 ```objc
 [XXObject alloc] init];
@@ -22,7 +22,7 @@ categories: [底层探索]
 
 ### question
 
-先来个思考题测试下，下面代码的输出结果与你想象的一样么？
+先来个思考题，对于如下的代码，输出结果与你分析的一样么？
 
 ```objc
 RDPerson *p1 = [RDPerson alloc];
@@ -33,13 +33,13 @@ Log(@"%@ -- %p -- %p",p2, p2, &p2);
 Log(@"%@ -- %p -- %p",p3, p3, &p3);
 ```
 
-Log 语句打印的第一个是变量指向的对象，第二个是对象的内存地址，第三个是变量的内存地址。
+Log 语句打印的第一个元素是变量指向的对象，第二个元素是指向对象的内存地址，第三个是元素变量的内存地址。
 其中 RDPerson 为继承于 NSObject 的一个类，目前没有任何属性和方法。
 
 可能你对 `%@` `%p` 的格式含义不清楚。
 
 - %@ 是打印指定对象的 description 属性，一般是一个字符串。
-- %p 是以0x开头，打印出指针的值，也就是内存地址。
+- %p 是以 0x 开头，打印出指针的值，也就是内存地址。
 - 更多可以参考官网文档对 [String Format Specifiers](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Strings/Articles/formatSpecifiers.html) 的描述。
 
 Log 是一个宏定义，是对 printf 函数的封装。
@@ -54,7 +54,7 @@ Log 是一个宏定义，是对 printf 函数的封装。
 
 从左往右，第三列是打印变量 p1, p2, p3 的内存地址，肯定是不相同的。那么第一列和第二列的打印内容是否是相同的？或者不同的呢？记一下你现在的思考答案。
 
-代码的运行结果出来了，看是不是出乎你所料。
+代码的运行结果出来了，看有没有出乎你所料。
 
 ```objc
 <RDPerson: 0x10123c230> -- 0x10123c230 -- 0x7ffeefbff528
@@ -62,15 +62,15 @@ Log 是一个宏定义，是对 printf 函数的封装。
 <RDPerson: 0x10123c230> -- 0x10123c230 -- 0x7ffeefbff518
 ```
 
-根据打印结果，可以看出，变量 p1, p2, p3 中存储的都是 RDPerson 对象的内存地址，也就是它们指向了同一个对象。
+根据打印结果可以看出，变量 p1, p2, p3 中存储的都是 RDPerson 对象的内存地址，也就是它们指向了同一个对象。
 
 这三个变量地址是依次递减的，也印证了之前说的，变量是存储在栈上，栈底是高地址，栈顶是低地址，它们是由高到低进行分布的。
 
-alloc 的流程是什么样的呢？ init 又做了啥呢？通过 Apple 开源的 runtime 源码 [objc4](https://opensource.apple.com/tarballs/objc4/), 我们可以一探究竟，本文参考的是 objc-781 版本。
+alloc 的流程是什么样的？ init 又做了啥？通过 Apple 开源的 runtime 源码 [objc4](https://opensource.apple.com/tarballs/objc4/), 我们可以一探究竟，本文参考的是 objc-781 版本。
 
 ### alloc
 
-在 NSObject.mm 文件中，我们可以找到 alloc 的代码实现
+在 `NSObject.mm` 文件中，我们可以找到 `alloc` 的代码实现
 
 ```objc
 + (id)alloc {
@@ -87,7 +87,7 @@ alloc 的流程是什么样的呢？ init 又做了啥呢？通过 Apple 开源�
 4 _class_createInstanceFromZone(cls, 0, nil, OBJECT_CONSTRUCT_CALL_BADALLOC)
 ```
 
-比较关键的是方法是 `_class_createInstanceFromZone `, 在这个方法中，完成了内存空间计算、内存申请、对象关联等操作，完整代码如下：
+比较关键的方法是 `_class_createInstanceFromZone `。 在这个方法中，完成了内存空间计算、内存申请、对象关联等操作，完整代码如下：
 
 ```objc
 _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
@@ -146,7 +146,9 @@ fastpath 和 slowpath 是啥？
 #define slowpath(x) (__builtin_expect(bool(x), 0))
 ```
 
-可以看出，这是两个宏定义。`__builtin_expect` 又是什么呢？通过查询 gcc 资料得知，__builtin_expect 是 gcc 编译器的内置函数，用于程序员将分支预测信息告诉编译器，从而让编译器优化我们的代码，提高指令跳转性能。在底层我们知道，分支语句都是通过 jmp 跳转指令来实现的，jmp 要跳转的指令地址越近，做的计算越少，则性能越好。
+这是两个宏定义。`__builtin_expect` 又是什么呢？通过查询 gcc 资料得知，`__builtin_expect` 是 gcc 编译器的内置函数，用于程序员将分支预测信息告诉编译器，从而让编译器优化我们的代码，提高指令跳转性能。在底层我们知道，分支语句都是通过 jmp 跳转指令来实现的，jmp 要跳转的指令地址越近，做的计算越少，则性能越好。
+
+### 内存空间计算
 
 第一步，对象占用内存的空间是怎么计算的呢？这引起了我的兴趣。
 
@@ -175,7 +177,7 @@ typedef __SIZE_TYPE__ size_t;
 #endif
 ```
 
-在 stddef.h 文件中可以找到 __SIZE_TYPE__ 的宏定义，因此 size_t 类型也就是 long unsigned int 的 typedef。
+在 `stddef.h` 文件中可以找到 `\_\_SIZE_TYPE__` 的宏定义，因此 size_t 类型也就是 long unsigned int 的 typedef。
 
 接着看看 cache.fastInstanceSize 做了啥？
 
@@ -194,6 +196,7 @@ size_t fastInstanceSize(size_t extra) const
     }
 }
 ```
+
 __builtin_constant_p 是 gcc 内置函数，用于判断是否是编译器常量。
 
 解开神秘计算的最后一道面纱了，align16 函数。
@@ -214,11 +217,15 @@ static inline size_t align16(size_t x) {
 0000 0000 0000 0000 0000 0000 0001 0000   // 按位与的结果，是 16，也就是输入9，输出 16  
 ```
 
-我们可以得出一个结论，align16 的作用是以16为基准，进行向上取整。小于 16 的数字，取 16，大于 16 小于 32 的数字取 32，以此类推。
+我们可以得出一个结论，align16 的作用是以 16 为基准，进行向上取整。小于 16 的数字，取 16，大于 16 小于 32 的数字取 32，以此类推。
 
 为什么要这么处理呢？这就涉及到了内存字节对齐的知识了。感兴趣的可以查查为什么内存要字节对齐呢。
 
+### 内存申请
+
 第二步中，calloc 是 c 标准库函数，`void	*calloc(size_t __count, size_t __size)` 分配内存空间，并返回一个指向它的指针。其中第一个参数是要被分配的元素的个数，第二个参数是元素的大小。
+
+### 初始化 isa
 
 第三步，initIsa 是生成 isa 数据，通过源码，发现最终调用的是这个函数。
 
@@ -239,28 +246,24 @@ objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor)
 #if SUPPORT_INDEXED_ISA
         ASSERT(cls->classArrayIndex() > 0);
         newisa.bits = ISA_INDEX_MAGIC_VALUE;
-        // isa.magic is part of ISA_MAGIC_VALUE
-        // isa.nonpointer is part of ISA_MAGIC_VALUE
         newisa.has_cxx_dtor = hasCxxDtor;
         newisa.indexcls = (uintptr_t)cls->classArrayIndex();
 #else
         newisa.bits = ISA_MAGIC_VALUE;
-        // isa.magic is part of ISA_MAGIC_VALUE
-        // isa.nonpointer is part of ISA_MAGIC_VALUE
         newisa.has_cxx_dtor = hasCxxDtor;
         newisa.shiftcls = (uintptr_t)cls >> 3;
 #endif
 
-        // This write must be performed in a single store in some cases
-        // (for example when realizing a class because other threads
-        // may simultaneously try to use the class).
-        // fixme use atomics here to guarantee single-store and to
-        // guarantee memory order w.r.t. the class index table
-        // ...but not too atomic because we don't want to hurt instantiation
         isa = newisa;
     }
 }
 ```
+
+根据前面的分析，我们知道 `shiftcls` 存储的是对象所属的类对象的地址。在这里给 `shiftcls` 赋值的时候，为什么 cls 要右移三位呢？
+
+很多人估计想的是因为 isa 前三位表示的是 `nonpointer`, `has_assoc`, `has_cxx_dtor` 所以要避开这三位存储。这么想的同学，你忽略了 isa 的结构，isa 是联合体位域，给位域的元素赋值，就是给位域中的指定位赋值。
+
+这里真正的原因是: 类的指针要按照字节 (8bits) 内存对齐，所以任何对象的后三位都是 0，右移三位的原因是舍弃无意义数据，减小内存的的消耗。不信的同学，你可以多创建一个对象，然后观察对象的地址，看看是不是有这样的规律。
 
 其中 uintptr_t 和 isa_t 的定义如下：
 
@@ -283,6 +286,8 @@ union isa_t {
 #endif
 };
 ```
+
+这里的 struct 和 ISA_BITFIELD 是定义了一个位域的数据结构，后面的文章会详细说明 isa 的结构的。
 
 发现根据是否是 nonpointer 走不同的 isa 生成逻辑。这下真相大白了。
 
@@ -311,8 +316,6 @@ init 的作用是啥呢？字面理解是初始化数据，看看源码是否如
 
 id _objc_rootInit(id obj)
 {
-    // In practice, it will be hard to rely on this function.
-    // Many classes do not properly chain -init calls.
     return obj;
 }
 ```
@@ -323,12 +326,11 @@ id _objc_rootInit(id obj)
 
 通过一幅图，我们可以总结 alloc 的调用流程。
 
-
 ![](https://raw.githubusercontent.com/muhlenxi/blog-images/master/img/oc-alloc.png)
 
 ### reference
 
-这我写这篇文章用到的资料，感兴趣可以看看。
+这是我写这篇文章时用到的资料，感兴趣可以看看。
 
 - 1、[objc4 781](https://opensource.apple.com/tarballs/objc4/)
 - 2、[String Format Specifiers](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Strings/Articles/formatSpecifiers.html)
