@@ -38,7 +38,7 @@ categories: [底层探索]
 
 + (void)sayStandUp;
 - (void)sayByebye;
-- 
+ 
 @end
 
 @implementation RDTeacher
@@ -101,11 +101,13 @@ objc_opt_class(id obj)
 }
 ```
 
-可以看出，在 \_\_OBJC2__ 中主要是通过 `getIsa()` 获取对象的 `class`，然后根据 `cls` 是否是 `meta class` 返回不同的 `class`, 如果是类对象，则返回本身，否则返回该对象所属的类。为什么要这么设计呢？当你看到本文最后的 isa 走向图，你就会恍然大悟的，暂时先记着这个逻辑。
+可以看出，在 \_\_OBJC2__ 中主要是通过 `getIsa()` 获取对象所属的 `class`，然后根据所属 `cls` 是否是 `meta class` 返回不同的 `class`。 如果是元类，则返回类对象本身，否则返回该对象所属的类。
 
-### class_getInstanceMethod class_getClassMethod
+为什么要这么设计呢？当你看到本文最后的 isa 走向图，你就会恍然大悟的，暂时先记着这个逻辑。
 
-下面代码块创建了一个 `RDTeacher` 类型的对象 t，然后得到对象 t 的类 cls 和元类 metaCls，然后我们分别在这两个 class 中查找 `sayByebye` 实例方法和查找 `sayStandUp` 实例方法，猜猜能找到么？
+### class_getInstanceMethod
+
+下面代码块创建了一个 `RDTeacher` 类型的对象 t，然后得到对象 t 的类 cls 和元类 metaCls。我们分别在这两个 class 中查找 `sayByebye` 实例方法和查找 `sayStandUp` 对象方法，猜猜能找到么？
 
 ```objc
 void testGetMethod() {
@@ -125,14 +127,16 @@ void testGetMethod() {
 }
 ```
 
-根据方法的功能定义，method0 能找到，method1 找不到。method2 能找到，method3 找不到。看看打印结果，是否是和我们的分析一致。
+根据方法的功能定义分析，method0 能找到，method1 找不到。method2 能找到，method3 找不到。看看打印结果是否和我们的分析一致。
 
 ```shell
 getInstanceMethod --> 0x100003118 0x0
 getClassMethod --> 0x100003098 0x100003098
 ```
 
-为什么 method3 能找到，也就是说，对于一个元类，也能找到它的类方法？看看源码是怎么实现的。
+为什么 method3 能找到，也就是说，`class_getClassMethod` 不管传入的是类还是元类，都能查找到类方法。
+
+这是为什么呢？看看 `class_getInstanceMethod` 源码是怎么实现的。
 
 ```objc
 Method class_getInstanceMethod(Class cls, SEL sel)
@@ -143,7 +147,64 @@ Method class_getInstanceMethod(Class cls, SEL sel)
 }
 ```
 
-以上是 `class_getInstanceMethod` 的实现，`_class_getMethod` 的实现就不贴了，感兴趣的可以自己找找，这里不影响我们的分析。 
+方法首先是判断了 cls 和 sel 是否是 nil，非 nil 后，走了消息查找和转发流程。最后调用了 `_class_getMethod`。看看这个方法是怎么实现的？
+
+```c
+static Method _class_getMethod(Class cls, SEL sel)
+{
+    mutex_locker_t lock(runtimeLock);
+    return getMethod_nolock(cls, sel);
+}
+```
+
+这个方法接着调用了 `getMethod_nolock`，继续探索。
+
+```c
+static method_t *
+getMethod_nolock(Class cls, SEL sel)
+{
+    method_t *m = nil;
+
+    runtimeLock.assertLocked();
+
+    ASSERT(cls->isRealized());
+
+    while (cls  &&  ((m = getMethodNoSuper_nolock(cls, sel))) == nil) {
+        cls = cls->superclass;
+    }
+
+    return m;
+}
+```
+
+这个方法是在所属类的 superclass 继承链上循环调用 `getMethodNoSuper_nolock` 方法查找 method。
+
+该方法的实现如下，关于方法查找的细节流程，在后续的文章会有介绍，这里就不深入了。
+
+```c
+static method_t *
+getMethodNoSuper_nolock(Class cls, SEL sel)
+{
+    runtimeLock.assertLocked();
+
+    ASSERT(cls->isRealized());
+    auto const methods = cls->data()->methods();
+    for (auto mlists = methods.beginLists(),
+              end = methods.endLists();
+         mlists != end;
+         ++mlists)
+    {
+        method_t *m = search_method_list_inline(*mlists, sel);
+        if (m) return m;
+    }
+
+    return nil;
+}
+```
+
+### class_getClassMethod
+
+我们看看 `class_getClassMethod` 方法是如何实现的。细节往往藏在源码之中。
 
 ```objc
 Method class_getClassMethod(Class cls, SEL sel)
@@ -162,7 +223,7 @@ Class getMeta() {
 }
 ```
 
-**如果类是元类返回本身，否则返回所属的类。** 根据这个逻辑，对类对象和该类对象所属的元类查找相同的类方法，底层调用逻辑是一样的。所以 method3 也能找到类方法的原因水落石出了。
+**如果类是元类返回本身，否则返回所属的类。** 根据这个逻辑，对类对象和该对象所属的元类查找相同的类方法，底层调用逻辑是一样的，都是在元类中查找对象方法。 所以 method3 也能找到类方法的原因水落石出了。
 
 ### isKindOfClass
 
@@ -245,7 +306,7 @@ void testMemberOf() {
 }
 ```
 
-以上的代码的打印结果是 `0 0 1  1`, 为什么会是这个结果呢？请看下面的分析：
+以上的代码的打印结果是 `0 0 1 1`, 为什么会是这个结果呢？请看下面的分析：
 
 - 对于 res4，`[NSObject class]` 得到的是 `NSObject 类`，类对象 `ISA()` 得到的是 `NSObject 根元类`，`NSObject 根元类` 和 `NSObject 类` 是不同的 ，所以得到的结果是 **0**。
 - 对于 res5，`[RDTeacher class]` 得到的是 `RDTeacher 类`，类对象 `ISA()` 得到的是 `RDTeacher 根元类`，`RDTeacher 根元类` 和 `RDTeacher 类` 是不相同的。所以得到的结果是 **0**。
@@ -253,9 +314,15 @@ void testMemberOf() {
 - 对于 res6，`[NSObject alloc]` 得到的是 `NSObject 对象`，对象 `ISA()` 得到的是 `NSObject 类`，`NSObject 类` 和 `NSObject 类` 是相同的。 所以得到的结果是 **1**。
 - 对于 res7，`[RDTeacher alloc]` 得到的是 `RDTeacher 对象`，对象 `ISA()` 得到的是 `RDTeacher 类`，在 `RDTeacher 类` 和 `RDTeacher 类` 是相同的。所以得到的结果是 **1**。
 
-最后附上 Apple 经典的 isa 走位图，如果你能把这张图了然于胸，上面的这些对你来说就是 small case。
+最后附上 Apple 经典的 isa 走位图，如果你能把这张图了然于胸，上面的这些对你来说就是 small cake。
 
 ![](https://raw.githubusercontent.com/muhlenxi/blog-images/master/img/isadir.png)
+
+### 总结
+
+- `isKindOfClass` 是在对象所属的类的 superclass 继承链上寻找是否有 class 等于给定的 class。**这里要注意的是，对象和类对象调用 `class` 方法得到的都是 「类对象」。**
+- `isMemberOfClass` 是判断对象所属的类是否等于给定的 class。
+- `class_getClassMethod` 方法，是通过调用 `class_getInstanceMethod` 方法实现的，只不过传的参数的类对象所属的元类而已。
 
 ### 后记
 

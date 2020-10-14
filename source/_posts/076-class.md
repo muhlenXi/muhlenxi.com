@@ -209,7 +209,7 @@ RDTeacher
 
 可以看出他们是相等的。也就是说我们得到了类对象的元类。
 
-继续探索 `元类 RDTeacher` 的 isa，看它指向了啥。用 `x/4gw` 读取这个地址中的内容。然后用 `p/x` 和 `po` 打印元类的 isa 指向的类的信息。
+继续探索 `元类 RDTeacher` 的 isa，看它指向了啥。用 `x/4gx` 读取这个地址中的内容。然后用 `p/x` 和 `po` 打印元类的 isa 指向的类的信息。
 
 ```c
 (lldb) x/4gx 0x0000000100003438
@@ -223,7 +223,7 @@ RDTeacher
 NSObject
 ```
 
-我们得到的这 NSObject 是我们常用的那个 NSObject 么？用 `p/x` 打印下类对象 NSObject 的地址。
+我们得到的这 NSObject 是我们常用的那个 NSObject 么？也就是所有对象的根类。用 `p/x` 打印下类对象 NSObject 的地址。
 
 ```c
 (lldb) p/x [NSObject class]
@@ -239,7 +239,7 @@ NSObject
 
 此时得到的这个值是和 `0x00000001003f10f0` 是相等的。说明 `元类 RDTeacher` 的 isa 指向的是 NSObject 的元类，这个元类称之为根元类（root meta class）。
 
-最后我们看看根源类的 superclass 和 isa 指向哪里？用 `x/4gx` 查看下 `0x00000001003f10f0` 地址的内容。
+最后我们看看根元类的 superclass 和 isa 指向哪里？用 `x/4gx` 查看下 `0x00000001003f10f0` 地址的内容。
 
 ```c
 (lldb) x/4gx 0x00000001003f10f0
@@ -254,7 +254,7 @@ NSObject
 NSObject
 ```
 
-这个 NSObject 的地址和我们之前的 NSObject 的类对象的地址一样的，都是 `0x00000001003f1140`, 所以根元类的父类是 NSObject。
+这个 NSObject 的地址和我们之前的 NSObject 的类对象的地址一样的，都是 `0x00000001003f1140`, 所以根元类的父类是 NSObject 根类。
 
 再看一下根元类的 isa 指向啥？用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出根源类所属的类的 isa。
 
@@ -411,6 +411,21 @@ struct method_list_t : entsize_list_tt<method_t, method_list_t, 0x3> {
     }
 };
 ```
+
+entsize_list_tt 这是个什么类型呢？看一看它是怎么定义的。
+
+```c
+template <typename Element, typename List, uint32_t FlagMask>
+struct entsize_list_tt {
+    uint32_t entsizeAndFlags;
+    uint32_t count;
+    Element first;
+    
+    // 其他方法
+}
+```
+
+可以看出，这是一个类模板，在模板中指定了所需泛型数据类型。
 
 #### property_array_t
 

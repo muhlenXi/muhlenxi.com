@@ -30,7 +30,6 @@ categories: [底层探索]
 
 如下我们定义了一个继承 `NSObject ` 的 `RDPerson ` 类，定义了一个继承 `RDPerson ` 的 `RDStudent ` 类。
 
-
 ### 类定义
 
 ```objc
@@ -291,13 +290,17 @@ LLookupRecover$1:
 总结一下方法缓存查找，也就是快速查找的流程。
 
 - 1、通过对象的 isa 获取到所属的 class，接着获取到 class 中的 cache，也就是 buckets。
-- 2、通过 sel & mask 得到 index，从而得到 buckets[index] 中的 bucket，然后对bucket 中的 sel 和调用的 _cmd 是否相同，如果相同则调用 `CacheHit` 结束流程，如果 sel 为 0，则调用 `CheckMiss` 结束流程。最后 index - 1，比较前一个元素。
+- 2、通过 sel & mask 得到 index，从而得到 buckets[index] 中的 bucket，然后判断 bucket 中的 sel 和调用的 _cmd 是否相同。
+- - 如果相同则判断前一个 index 中的 sel 是否相同，直到找到相同元素的边界，然后调用 `CacheHit` 结束流程。
+- - 如果 sel 为 0，则调用 `CheckMiss` 结束流程。如果不相同，则 index - 1，继续比较前一个元素。
 - 3、当遍历到第一个元素时，如果还没找到 sel，则跳转到最后一个元素，接着往前遍历查找。如果找到则调用 `CacheHit` 结束流程，如果遇到 sel 为 0，则调用 `JumpMiss` 结束流程。
 
 
 ## 后记
 
-本文我们探索了 `objc_msgSend` 中的缓存查找，也就是快速查找流程，下一篇文章中，我们将探索慢速查找流程，尽请期待。
+本文我们探索了 `objc_msgSend` 中的缓存查找，也就是快速查找流程。如果在缓存中没有找到要调用的方法，则会进入慢速查找流程。
+
+下一篇文章中，我们将探索慢速查找流程，尽请期待。
 
 我是穆哥，卖码维生的一朵浪花。我们下回见。
 

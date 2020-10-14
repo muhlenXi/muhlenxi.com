@@ -54,6 +54,8 @@ donate: false
 | Command + Shift + O | 根据文件名快速切换文件 |
 |||
 | Command + Control + space | 呼出 emoji 表情输入 |
+| Command + Option + left | 折叠代码 |
+| Command + Option + right | 展开代码 |
 
 
 ## 配置篇

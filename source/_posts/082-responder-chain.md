@@ -7,13 +7,13 @@ date: 2020-09-01 16:10:23
 categories: [底层探索]
 ---
 
-今天开始我们的底层探索旅程，第一篇我们将探索 iOS 的时间响应链，也就是探索事件是怎么产生和传递的？
+今天开始我们的底层探索旅程，第一篇我们将探索 iOS 的事件响应链，也就是探索事件是怎么产生和传递的？
 
 <!-- more -->
 
 ## 概述
 
-首先来说一下事件是什么？事件（event）是一个用于描述我们与 App 的交互的对象。比如，当我们触摸一下 iPhone 的屏幕，就产生了一个触摸事件。我们的 App 可以接收许多不同的事件，比如 `touch events`, `motion events`, `remote-control events` 和 `press events`。其中 touch events (触摸事件) 是最常见的事件，本文探索的就是触摸事件。
+首先来说一下事件是什么？事件（event）是一个用于描述我们与 App 交互的对象。比如，当我们触摸一下 iPhone 的屏幕，就产生了一个触摸事件。我们的 App 可以接收许多不同的事件，比如 `touch events`, `motion events`, `remote-control events` 和 `press events`。其中 touch events (触摸事件) 是最常见的事件，本文探索的就是触摸事件。
 
 在 iOS 中， App 通过 responder 对象来接收和处理事件。在这里，responder 可以称为响应者。一个响应者可以是 `UIResponder` 类的实例，也可以是继承 `UIResponder` 的类的实例，比如 `UIView`, `UIViewController` 和 `UIApplication`。UIKit 是基于 responder 来自动管理事件的。
 
@@ -45,7 +45,7 @@ open class UIView : UIResponder, 遵循的协议列表 {
 }
 ```
 
-根据上述代码我们可以知道，UIView 继承于 UIResponder，这也是 view 可以接收和处理事件的原因，接着，我们看下 UIResponder 的类信息。
+根据上述代码我们可以知道，UIView 继承于 UIResponder，这也是 UIView 及其派生类可以接收和处理事件的原因，接着我们看下 UIResponder 的类信息。
 
 ```swift
 open class UIResponder : NSObject, UIResponderStandardEditActions {
@@ -67,7 +67,7 @@ open class UIResponder : NSObject, UIResponderStandardEditActions {
 }
 ```
 
-通过上述代码，我们可以看到哪些有效信息呢？
+通过上述代码，我们可以得到哪些有效信息呢？
 
 - UIResponder 是一个链表节点，有一个 next 属性指向下一个 UIResponder。
 - UIResponder 提供了四个 `touch` 方法来处理事件，如果我们有 UIResponder 子类，需要 override 这四个方法来处理自己的事件。
@@ -93,9 +93,9 @@ open class UIResponder : NSObject, UIResponderStandardEditActions {
 
 ## 应用
 
-在一些不规则视图中，我们有的时候，想扩大或缩小它的响应热区。那么我们就可以在这个事件响应链上搞点事情。
+在一些不规则视图中，我们有时候想扩大或缩小它的响应热区。那么我们就可以在这个事件响应链上搞点事情。
 
-比如，我们想在不改变 frame 的情况下想扩大 UIButton 的响应热区，也就是点击它的边缘外的视图也可以触发点击事件，我们可以这么做。
+比如，我们想在不改变 frame 的情况下扩大 UIButton 的响应热区，也就是点击它的边缘外的视图也可以触发点击事件，我们可以这么做。
 
 ```swift
 class ExtendButton: UIButton {

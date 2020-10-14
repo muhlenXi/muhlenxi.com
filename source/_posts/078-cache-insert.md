@@ -40,6 +40,8 @@ Mac 的处理器主要用的是 i386 和 x86-64 架构。iPhone 的处理器主�
 
 ## cache_t
 
+通过前面的探索，我们了解到在底层是用 `objc_class` 表示类信息的。
+
 ```objc
 struct objc_class : objc_object {
     Class superclass;
@@ -49,7 +51,7 @@ struct objc_class : objc_object {
 
 ```
 
-之前我们探索了 superclass，bits，现在来探索 cache， cache 主要存储的是调用过的方法。涉及到缓存，就想知道缓存的机制是什么？比如是如何保存的？如何查找的？
+之前我们探索了 superclass，bits，现在来探索 cache，cache 主要缓存的是调用过的方法。涉及到缓存，就想知道缓存的机制是什么？比如是如何保存的？如何查找的？
 
 首先看看 `cache_t` 这个类型。
 
@@ -164,7 +166,9 @@ private:
 
 在上面的 `cache_t` 中列出了一些核心方法，接下来我们看看这些方法的实现，这些方法在 `objc-cache.m` 文件中可以找到。
 
-当缓存中新增方法时，缓存的容量势必增加。全局搜索 `incrementOccupied()` 方法调用，发现只有一处，在 `void cache_t::insert(Class cls, SEL sel, IMP imp, id receiver)` 方法中，也就是说，insert 方法也肯定会调用，打断点，也发现会运行到这里。insert 方法源码如下。
+当缓存中新增方法时，缓存的容量势必增加。通过方法名可以猜测 `incrementOccupied` 方法的功能是缓存容量增加占用。
+
+全局搜索 `incrementOccupied()` 方法调用，发现只有一处，在 `void cache_t::insert(Class cls, SEL sel, IMP imp, id receiver)` 方法中，也就是说，insert 方法也肯定会调用，打断点，也发现会运行到这里。insert 方法源码如下。
 
 ```c
 ALWAYS_INLINE
@@ -218,7 +222,13 @@ void cache_t::insert(Class cls, SEL sel, IMP imp, id receiver)
 
 ```
 
-上面用于生成 index 的 `cache_next` 方法的实现也不是很复杂。
+根据代码中的注释很容易理解 `insert` 的逻辑了，这个方法主要做了三件事情：
+
+- 1、如果缓存空间没有初始化，则申请容量为 4 的缓存空间。
+- 2、占用空间+1后，如果占用空间大于或等于总容量的 3/4 , 则扩容为之前容量的 2 倍，否则不扩容。
+- 3、将要调用的方法添加到缓存中，如果缓存中存在该方法则直接返回。
+
+上述代码用于生成 index 的 `cache_next` 方法的实现也不是很复杂，就是简单的取前一个 index，如果到第一个元素的下标了，下一个下标将是数组最后一个元素的 index。
 
 ```c
 static inline mask_t cache_next(mask_t i, mask_t mask) {
@@ -226,7 +236,7 @@ static inline mask_t cache_next(mask_t i, mask_t mask) {
 }
 ``` 
 
-根据代码中的注释很容易理解 `insert` 的逻辑了，接着看看 `reallocate` 方法的实现。
+接着看看 `reallocate` 方法的实现，在第一次申请缓存空间和扩容会调用这个方法。
 
 ```c
 ALWAYS_INLINE
@@ -277,13 +287,12 @@ void cache_t::setBucketsAndMask(struct bucket_t *newBuckets, mask_t newMask)
     
     ASSERT(buckets <= bucketsMask);
     ASSERT(mask <= maxMask);
-    // (newMast 左移 48 位) | (newBuckets) 运算后就是 _maskAndBuckets 的新值
+    // (newMask 左移 48 位) | (newBuckets) 运算后就是 _maskAndBuckets 的新值
     _maskAndBuckets.store(((uintptr_t)newMask << maskShift) | (uintptr_t)newBuckets, std::memory_order_relaxed);
     _occupied = 0;  // 占用清零处理
 }
 
 ```
-
 
 通过以上的分析，我们可以得到一个方法 ARM64 指令集架构下 cache-insert 的流程图。
 

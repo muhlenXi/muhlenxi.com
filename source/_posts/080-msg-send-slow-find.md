@@ -52,7 +52,7 @@ categories: [底层探索]
 .endmacro
 ```
 
-也就是说这两个方法最终都会跳转到 `__objc_msgSend_uncached` 这里，那么这里又是啥呢？通过全局搜索，发现类似这个信息, 除此之外，再没有发现任何有价值信息。
+也就是说在 `NORMAL` 模式下，这两个方法最终都会跳转到 `__objc_msgSend_uncached` 这里，那么这里又是啥呢？通过全局搜索，发现类似这个信息, 除此之外，再没有发现任何有价值信息。
 
 ```armasm
 STATIC_ENTRY __objc_msgSend_uncached
@@ -215,7 +215,50 @@ enum {
 
 `lookUpImpOrForward` 主要做的是在 cls 的继承链上调用 `getMethodNoSuper_nolock` 查找方法的 imp, 直到 superclass 为 nil 为止，如果找到则调用 `log_and_fill_cache` 缓存方法然后返回 imp，找不到则会调用 `resolveMethod_locked` 方法，并且这个方法只会被调用一次。
 
-那么，`getMethodNoSuper_nolock` 是怎么查找 cls 中的 imp 呢？
+`log_and_fill_cache` 方法做了啥？这引起了我的好奇。
+
+```c
+static void
+log_and_fill_cache(Class cls, IMP imp, SEL sel, id receiver, Class implementer)
+{
+#if SUPPORT_MESSAGE_LOGGING
+    if (slowpath(objcMsgLogEnabled && implementer)) {
+        bool cacheIt = logMessageSend(implementer->isMetaClass(), 
+                                      cls->nameForLogging(),
+                                      implementer->nameForLogging(), 
+                                      sel);
+        if (!cacheIt) return;
+    }
+#endif
+    cache_fill(cls, sel, imp, receiver);
+}
+```
+
+这个方法的作用是根据配置打印日志和调用 `cache_fill` 方法填充缓存。
+
+```c
+void cache_fill(Class cls, SEL sel, IMP imp, id receiver)
+{
+    runtimeLock.assertLocked();
+
+#if !DEBUG_TASK_THREADS
+    // Never cache before +initialize is done
+    if (cls->isInitialized()) {
+        cache_t *cache = getCache(cls);
+#if CONFIG_USE_CACHE_LOCK
+        mutex_locker_t lock(cacheUpdateLock);
+#endif
+        cache->insert(cls, sel, imp, receiver);
+    }
+#else
+    _collecting_in_critical();
+#endif
+}
+```
+
+`cache->insert` 是不是很熟悉，这就是我们上篇文章探索的缓存插入方法。
+
+接下来看看查找流程，`getMethodNoSuper_nolock` 是怎么查找 cls 中的 imp 呢？
 
 ```c
 static method_t *
