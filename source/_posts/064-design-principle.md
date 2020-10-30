@@ -1,5 +1,5 @@
 ---
-title: 聊聊 设计原则
+title: SOLID 设计原则
 toc: true
 donate: false
 tags: []
@@ -16,7 +16,7 @@ categories: 编程思想
 ## Single Responsibility Principle 单一职责原则
 
 
-> A class should have only one reason to change.
+> A class should have one, and only one, reason to change.
 
 如果一个类承担的职责过多，就等于把这些职责耦合在一起，一个职责的变化可能会削弱或者抑制这个类完成其他职责的能力。这种耦合会导致脆弱的设计，当变化发生时，设计会遭受到意想不到的破坏。
 
@@ -24,7 +24,7 @@ categories: 编程思想
 
 ## Open Close Principle 开闭原则
 
-> Classes should be open for extension, but closed for modification. 
+> Software entities(classes, modules, functions, etc) should be open for extension, but closed for modification. 
 
 面对需求，对程序的改动是通过增加新代码进行的，而不是更改现有的代码。
 
@@ -32,7 +32,7 @@ categories: 编程思想
 
 在我们最初编写代码时，假设变化不会发生。当变化发生时，我们就创建抽象来隔离以后发生的同类变化。
 
-## Liskov's Substitution Principle 里氏替换原则
+## Liskov Substitution Principle 里氏替换原则
 
 > Derived types must be completely substitutable for their base types.
 
@@ -40,7 +40,7 @@ categories: 编程思想
 
 ## Interface Segregation Principle  接口分离原则
 
-> Clients should not be forced to depend upon interfaces that they don't use.
+> Clients should not be forced to depend upon interfaces that they do not use.
 
 
 ## Dependency Inversion Principle 依赖倒置原则
@@ -48,7 +48,19 @@ categories: 编程思想
 > High-level modules should not depend on low-level modules. Both should depend on abstractions.
 > Abstractions should not depend on details. Details should depend on abstractions.
 
-高层模块不应该依赖低层模块。两个都应该依赖抽象。抽象不应该依赖细节。细节应该依赖抽象。
+高层模块不应该依赖低层模块。两个都应该依赖抽象。
+
+抽象不应该依赖细节。细节应该依赖抽象。
+
+## Other
+
+### DRY
+
+> Don't repeat yourself.
+
+### KISS
+
+> Keep it simple stupid.
 
 ## 参考资料
 
