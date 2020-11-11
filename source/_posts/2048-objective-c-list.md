@@ -26,5 +26,5 @@ categories:
 - [『底层探索』10 - Mach-O 文件分析](https://www.muhlenxi.com/2020/09/28/084-mach-o/)
 - [『底层探索』11 - iOS App 启动流程分析一](https://www.muhlenxi.com/2020/09/29/085-dyld/)
 - [『底层探索』12 - 初探类加载](https://www.muhlenxi.com/2020/10/14/086-load-class/)
-- [『底层探索』13 - KVC 探索](https://www.muhlenxi.com/2020/10/29/088-key-value-coding/)
+- [『底层探索』13 - KVC 探索](https://www.muhlenxi.com/2020/10/29/087-key-value-coding/)
 
