@@ -20,7 +20,7 @@ KVC (Key Value Coding) 是 Apple 的一种通过 key 或者 name 来直接访问
 - `setValue(Any?, forKey: String)` 设置成员变量的值。
 - `setValue(Any?, forKeyPath: String)` 设置成员对象中的成员变量的值。
 - `value(forKey: String)` 获取成员变量的值。
-- `func value(forKeyPath: String)` 获取成员对象的成员变量值。
+- `value(forKeyPath: String)` 获取成员对象的成员变量值。
 - [更多用法](https://developer.apple.com/documentation/objectivec/nsobject/nskeyvaluecoding)
 
 ## KVC 底层原理
