@@ -58,7 +58,7 @@ dispatch_queue_t concurrent = dispatch_queue_create("my concurrent queue", DISPA
 #define DISPATCH_QUEUE_SERIAL NULL
 ```
 
-## 任务提交方式
+## 任务添加方式
 
 我们可以将要执行的代码以 Block 的方式封装，然后将这个 block 添加到队列中，添加方式有同步和异步，这是怎么确定的呢？
 
@@ -276,12 +276,372 @@ dispatch_async(concurrent, ^{
 
 关于 GCD 的底层原理，下篇文章将会探索。
 
-### dispatch semaphore 
+### dispatch barrier 
+
+`dispatch barrier` 用于在队列中同步一个或多个任务。使用它添加的任务有个特点，就是在这个 barrier 前面添加的所有的任务完成后，才会执行 barrier 中的 block，block 执行完成后，才会继续执行队列中的剩余任务。这也就是常说的 “栅栏函数”。
+
+`dispatch barrier` 添加的任务有两种方式，异步和同步。
+
+`dispatch_barrier_async` 是异步添加任务，添加后就马上返回去做别的事情了。要注意的是，这个方法适用于你自己创建的并行队列。如果你添加的是串行队列或者是全局并行队列，这个函数的行为和 `dispatch_async` 是一致的。
+
+`dispatch_barrier_sync` 是同步添加任务，添加后不会马上返回，而是等到 block 中的任务都完成后，才会返回做别的事情。注意该方法会阻塞当前线程。这个方法适用于你自己创建的并行队列。如果你添加的是串行队列或者是全局并行队列，这个函数的行为和 `dispatch_sync` 是一致的。
+
+使用方式如下：
+
+```c
+dispatch_barrier_async(concurrent, ^{
+    // 异步添加任务
+});
+
+dispatch_barrier_sync(concurrent, ^{
+    // 同步添加任务
+});
+```
+
+**重点提示：** 在并行队列中，dispatch_async 中的 block 中，如果使用 `dispatch_barrier_sync` 方法会导致死锁。
+
+## 队列 vs 同步 vs 异步
+
+这里，我们分别在 `主队列`，`全局并行队列`，`自建串行队列`，`自建并行队列` 中，分别采用 `同步` 和 `异步` 方式添加 10 个任务，然后看看执行任务的线程情况。
+
+```objc
+- (void) test {
+    dispatch_queue_t serial = dispatch_queue_create("my serial queue", DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_t concurrent = dispatch_queue_create("my concurrent queue", DISPATCH_QUEUE_CONCURRENT);
+    dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_queue_t mainQueue = dispatch_get_main_queue();
+    
+    dispatch_queue_t testQueue = mainQueue;
+    NSLog(@"main start --> %@",  NSThread.currentThread);
+    for(int i = 0; i < 10; i++) {
+        dispatch_sync(testQueue, ^{
+            NSLog(@"执行任务 %d, 当前线程是 --> %@", i+1, NSThread.currentThread);
+        });
+    }
+    NSLog(@"main end");
+}
+```
+
+###  队列 vs 同步 
+
+#### main + sync
+
+1、我们将 `testQueue` 赋值为 `mainQueue`，运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x28151c900>{number = 1, name = main}
+```
+
+终端打印这句话后就报错了，原因是产生了死锁。这里分析下原因，主线程中的代码执行完，才会执行 block 中的代码，也就是 sync 执行完后才会执行 block，sync 同步的特点是，block 执行完，sync 才会回调。因此 block 和 sync 互相等待，这就产生了死锁。
+
+#### serial + sync
+
+2、我们将 `testQueue` 赋值为 `serial`，运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 1, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 2, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 3, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 4, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 5, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 6, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 7, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 8, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 9, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+执行任务 10, 当前线程是 --> <NSThread: 0x282ef8900>{number = 1, name = main}
+main end --> <NSThread: 0x282ef8900>{number = 1, name = main}
+```
+
+没有新的线程参与，队列中的任务顺序执行，并且阻塞了主线程，任务是主线程执行的。
+
+#### concurrent + sync
+
+3、我们将 `testQueue` 赋值为 `concurrent`，运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 1, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 2, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 3, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 4, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 5, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 6, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 7, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 8, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 9, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+执行任务 10, 当前线程是 --> <NSThread: 0x283a94980>{number = 1, name = main}
+main end --> <NSThread: 0x283a94980>{number = 1, name = main}
+```
+
+没有新的线程参与，队列中的任务顺序执行，并且阻塞了主线程，任务是主线程执行的。
+
+#### global + sync
+
+4、我们将 `testQueue` 赋值为 `globalQueue`，运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 1, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 2, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 3, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 4, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 5, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 6, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 7, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 8, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 9, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+执行任务 10, 当前线程是 --> <NSThread: 0x283df0900>{number = 1, name = main}
+main end --> <NSThread: 0x283df0900>{number = 1, name = main}
+```
+
+没有新的线程参与，队列中的任务顺序执行，并且阻塞了主线程，任务是主线程执行的。
+
+###  队列 vs 异步
+
+#### main + async
+
+5、我们将 `testQueue` 赋值为 `mainQueue`，添加方式改为 `async`。运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x281a00980>{number = 1, name = main}
+main end --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 1, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 2, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 3, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 4, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 5, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 6, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 7, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 8, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 9, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+执行任务 10, 当前线程是 --> <NSThread: 0x281a00980>{number = 1, name = main}
+```
+
+没有新线程参与，主线程中的代码都执行完毕后，就去执行主队列中的任务了。队列中的任务是顺序执行的。
+
+#### serial + async
+
+6、我们将 `testQueue` 赋值为 `serial`，添加方式改为 `async`。运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x28036c900>{number = 1, name = main}
+main end --> <NSThread: 0x28036c900>{number = 1, name = main}
+执行任务 1, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 2, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 3, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 4, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 5, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 6, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 7, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 8, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 9, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+执行任务 10, 当前线程是 --> <NSThread: 0x280368fc0>{number = 6, name = (null)}
+```
+
+主线程没有被阻塞。有一个新的线程执行队列中任务，任务是顺序执行的。
+
+#### concurrent + async
+
+7、我们将 `testQueue` 赋值为 `concurrent`，添加方式改为 `async`。运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x282550900>{number = 1, name = main}
+main end --> <NSThread: 0x282550900>{number = 1, name = main}
+执行任务 3, 当前线程是 --> <NSThread: 0x28256b4c0>{number = 6, name = (null)}
+执行任务 2, 当前线程是 --> <NSThread: 0x28251c300>{number = 5, name = (null)}
+执行任务 1, 当前线程是 --> <NSThread: 0x28251ae80>{number = 3, name = (null)}
+执行任务 4, 当前线程是 --> <NSThread: 0x28256b4c0>{number = 6, name = (null)}
+执行任务 5, 当前线程是 --> <NSThread: 0x282504280>{number = 7, name = (null)}
+执行任务 7, 当前线程是 --> <NSThread: 0x28251ae80>{number = 3, name = (null)}
+执行任务 9, 当前线程是 --> <NSThread: 0x28251ae80>{number = 3, name = (null)}
+执行任务 10, 当前线程是 --> <NSThread: 0x28251c300>{number = 5, name = (null)}
+执行任务 6, 当前线程是 --> <NSThread: 0x28256b4c0>{number = 6, name = (null)}
+执行任务 8, 当前线程是 --> <NSThread: 0x282504280>{number = 7, name = (null)}
+```
+
+主线程没有被阻塞。有多个线程参与了任务执行，任务执行的次序是无序的。
+
+#### global + async
+
+8、我们将 `testQueue` 赋值为 `globalQueue`，添加方式改为 `async`。运行下，然后看看打印输出。
+
+```shell
+main start --> <NSThread: 0x2830ec900>{number = 1, name = main}
+main end --> <NSThread: 0x2830ec900>{number = 1, name = main}
+执行任务 1, 当前线程是 --> <NSThread: 0x2830b8100>{number = 6, name = (null)}
+执行任务 3, 当前线程是 --> <NSThread: 0x2830b8100>{number = 6, name = (null)}
+执行任务 2, 当前线程是 --> <NSThread: 0x2830a9d00>{number = 3, name = (null)}
+执行任务 5, 当前线程是 --> <NSThread: 0x2830b8100>{number = 6, name = (null)}
+执行任务 6, 当前线程是 --> <NSThread: 0x2830bd200>{number = 7, name = (null)}
+执行任务 7, 当前线程是 --> <NSThread: 0x2830b8100>{number = 6, name = (null)}
+执行任务 4, 当前线程是 --> <NSThread: 0x2830b8440>{number = 5, name = (null)}
+执行任务 8, 当前线程是 --> <NSThread: 0x2830a9d00>{number = 3, name = (null)}
+执行任务 9, 当前线程是 --> <NSThread: 0x2830ea180>{number = 4, name = (null)}
+执行任务 10, 当前线程是 --> <NSThread: 0x2830b8100>{number = 6, name = (null)}
+```
+
+这个结果和 concurrent 是一致的。主线程没有被阻塞。有多个线程参与了任务执行，任务执行的次序是无序的。
+
+### 队列 同步 异步 总结
+
+通过一个表总结以上所有情况：
+
+
+| 队列/函数 | 主队列 | 自建串行队列 | 自建异步队列 | 全局队列 |
+|-------|-----|--------|--------|------|
+| 同步    |  无新线程参与，主线程阻塞。都是主线程顺序执行 。  | 与左边一样       |   与左边一样    |  与左边一样    |
+| 异步    |  无新线程参与，主线程执行完，然后顺序执行任务   |  有 1 个新线程参与，顺序执行任务      |  有多个新线程参与，无序执行任务      |  有多个新线程参与，无序执行任务    |
+
 
 ## 大脑热身赛
 
-下面我们通过几道题来巩固下上面的知识。
+下面我们通过几道面试题来巩固下上面的知识。
+
+1、并行队列+异步添加。下面代码的输出顺序是啥？想想为什么?
+
+```objc
+- (void) question {
+    //并行队列
+    dispatch_queue_t queue = dispatch_queue_create("com.muhlenXi", DISPATCH_QUEUE_CONCURRENT);
+    NSLog(@"1");
+    // 耗时
+    dispatch_async(queue, ^{
+        NSLog(@"2");
+        dispatch_async(queue, ^{
+            NSLog(@"3");
+        });
+        NSLog(@"4");
+    });
+    NSLog(@"5");
+}
+
+--------------------------------
+result: 1 5 2 4 3
+```
+
+2、并行队列+异步中又嵌套同步添加。下面代码的输出顺序是啥？想想为什么?
+
+```objc
+- (void) question {
+    //并行队列
+    dispatch_queue_t queue = dispatch_queue_create("com.muhlenXi", DISPATCH_QUEUE_CONCURRENT);
+    NSLog(@"1");
+    // 耗时
+    dispatch_async(queue, ^{
+        NSLog(@"2");
+        dispatch_sync(queue, ^{
+            NSLog(@"3");
+        });
+        NSLog(@"4");
+    });
+    NSLog(@"5");
+}
+
+--------------------------------
+result: 1 5 2 3 4
+```
+
+3、串行队列+异步中又嵌套同步添加。下面代码的输出顺序是啥？想想为什么?
+
+```objc
+- (void) question {
+    //并行队列
+    dispatch_queue_t queue = dispatch_queue_create("com.muhlenXi", DISPATCH_QUEUE_SERIAL);
+    NSLog(@"1");
+    // 耗时
+    dispatch_async(queue, ^{
+        NSLog(@"2");
+        dispatch_sync(queue, ^{
+            NSLog(@"3");
+        });
+        NSLog(@"4");
+    });
+    NSLog(@"5");
+}
+
+--------------------------------
+result: 1 5 2 死锁崩溃
+```
+
+这里产生死锁的原因是，串行队列中任务都是顺序执行的，前一个任务执行完，才会执行下一个任务。
+
+- 1、串行队列中的任务有 `NSLog2` `dispatch_sync` `NSLog4` `NSLog3`。
+- 2、根据任务添加顺序，`NSLog2` 执行完后会执行 `dispatch_sync`, sync 有个特点，就是 block 中的任务执行完，才会执行剩下任务，也就是必须要执行 `NSLog3`。
+- 3、而要执行 `NSLog3`, 则需要前面的 `dispatch_sync` `NSLog4` 执行完才可以。所以这三者就构成了一种相互等待的关系，从未产生了死锁。
+
+*解答题做懵逼了，那么来做几个选择题换换脑子。* 之前看动态，看到有些人说今天太累了，做几道高数题、英语题或者算法发送下，我是大写的服，这就是差距。
+
+
+4、并行队列 + 异步 + 同步。选出下面代码的执行顺序是啥？（据说是某博的面试题）
+
+- A: 1230789
+- B: 1237890
+- C: 3120798
+- D: 2137890
+
+```objc
+- (void) question {
+    //并行队列
+    dispatch_queue_t queue = dispatch_queue_create("com.muhlenXi", DISPATCH_QUEUE_CONCURRENT);
+    dispatch_async(queue, ^{ // 耗时
+        NSLog(@"1");
+    });
+    dispatch_async(queue, ^{
+        NSLog(@"2");
+    });
+    
+    // 同步
+    dispatch_sync(queue, ^{
+        NSLog(@"3 -> %@", NSThread.currentThread);
+    });
+    
+    NSLog(@"0 -> %@", NSThread.currentThread);
+
+    dispatch_async(queue, ^{
+        NSLog(@"7");
+    });
+    dispatch_async(queue, ^{
+        NSLog(@"8");
+    });
+    dispatch_async(queue, ^{
+        NSLog(@"9");
+    });
+}
+```
+
+答案是 A 和 C， 为什么会这样呢？我们分析一波。
+
+- 1、在主线程中，dispatch_async 添加完任务后会立刻返回，然后执行其他主线程中的任务。
+- 2、 1 和 2 放到并行队列后，此时多个线程会开始执行任务，并且是无序的。主线程执行到 dispatch_sync 后，线程被阻塞了，3 交给主线程执行，3 执行完会执行主线程中的任务，也就是 0。
+- 3、主线程继续将 7 8 9 添加到并行队列中。多个线程再继续执行 7 8 9，并且是无序的。
+- 4、因此得出结论，0 一定是在 3 之后执行，并且这两个任务一定在 7 8 9 之前。
+
+5、最后以一道简单题结束测试。看看下面一共有几种类型的队列？（据说是某团的面试题）
+
+```objc
+- (void) test {
+    //主队列 - Main Dispatch Queue
+    dispatch_queue_t mainQueue = dispatch_get_main_queue();
+    //串行队列 - Serial Dispatch Queue
+    dispatch_queue_t serialQueue = dispatch_queue_create("com.muhlenXi", NULL);
+    //全局并发队列 - Global Dispatch Queue
+    dispatch_queue_t globalQueue = dispatch_get_global_queue(0, 0);
+    //并发队列 - Concurrent Dispatch Queue
+    dispatch_queue_t concurrentQueue = dispatch_queue_create("com.muhlenXi", DISPATCH_QUEUE_CONCURRENT);
+}
+```
+
+答案毫无疑问是 2 种，说是 4 种的去面壁思过吧。
+
+- 串行队列：mainQueue、serialQueue
+- 并行队列：globalQueue、concurrentQueue
+
+## 后记
+
+本篇文章需要仔细阅读，下篇我们通过源码探究下它们的底层原理。我是穆哥，卖码维生的一朵浪花。我们下次见。
 
 ## 参考资料
 
 - [1. Dispatch Queues](https://developer.apple.com/library/archive/documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html#//apple_ref/doc/uid/TP40008091-CH102-SW1)
+- [2. Dispatch Barrier](https://developer.apple.com/documentation/dispatch/dispatch_barrier?language=objc)

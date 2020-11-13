@@ -27,4 +27,5 @@ categories:
 - [『底层探索』11 - iOS App 启动流程分析一](https://www.muhlenxi.com/2020/09/29/085-dyld/)
 - [『底层探索』12 - 初探类加载](https://www.muhlenxi.com/2020/10/14/086-load-class/)
 - [『底层探索』13 - KVC 探索](https://www.muhlenxi.com/2020/10/29/087-key-value-coding/)
-
+- [『底层探索』14 - KVO 探索](https://www.muhlenxi.com/2020/11/11/088-key-value-observer/)
+- [『底层探索』15 - GCD 中队列、Block 的用法和区别](https://www.muhlenxi.com/2020/11/12/089-gcd-queue-function/)
