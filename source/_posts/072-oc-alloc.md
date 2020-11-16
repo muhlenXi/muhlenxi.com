@@ -64,7 +64,7 @@ Log 是一个宏定义，是对 printf 函数的封装。
 
 根据打印结果可以看出，变量 p1, p2, p3 中存储的都是 RDPerson 对象的内存地址，也就是它们指向了同一个对象。
 
-这三个变量地址是依次递减的，也印证了之前说的，变量是存储在栈上，栈底是高地址，栈顶是低地址，它们是由高到低进行分布的。
+这三个变量的地址是依次递减的，也印证了之前说的，变量是存储在栈上，栈底是高地址，栈顶是低地址，它们是由高到低进行分布的。
 
 alloc 的流程是什么样的？ init 又做了啥？通过 Apple 开源的 runtime 源码 [objc4](https://opensource.apple.com/tarballs/objc4/), 我们可以一探究竟，本文参考的是 objc-781 版本。
 
@@ -139,7 +139,7 @@ _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
 }
 ```
 
-fastpath 和 slowpath 是啥？
+fastpath 和 slowpath 是啥？找找声明的地方。
 
 ```objc
 #define fastpath(x) (__builtin_expect(bool(x), 1))
@@ -165,7 +165,7 @@ size_t instanceSize(size_t extraBytes) const {
 }
 ```
 
-size_t 是啥？
+这里计算的内存空间至少是 16 字节的。size_t 是啥？
 
 ```objc
 typedef __SIZE_TYPE__ size_t;
@@ -227,7 +227,7 @@ static inline size_t align16(size_t x) {
 
 ### 初始化 isa
 
-第三步，initIsa 是生成 isa 数据，通过源码，发现最终调用的是这个函数。
+第三步，initIsa 是设置生成对象 obj 的 isa。通过源码，发现最终调用的是这个函数。
 
 ```objc
 inline void 
@@ -289,7 +289,7 @@ union isa_t {
 
 这里的 struct 和 ISA_BITFIELD 是定义了一个位域的数据结构，后面的文章会详细说明 isa 的结构的。
 
-发现根据是否是 nonpointer 走不同的 isa 生成逻辑。这下真相大白了。
+`initIsa` 方法根据是否是 nonpointer 走不同的 isa 生成逻辑。如果不是 nonpointer 的话，isa 直接赋值为 cls 的地址。 这下真相大白了。
 
 ### new
 
@@ -300,6 +300,10 @@ union isa_t {
     return [callAlloc(self, false/*checkNil*/) init];
 }
 ```
+
+所以使用 `new` 就相当于 `[[XXX alloc] init]`。如果子类的实现中重写了 `init` 方法，new 会调用子类的 init 方法。没有重写则调用父类方法。
+
+如果你有携带初始化属性的 `initWithXXX` 初始化方法，使用 `new` 来创建对象则是不是调用这个方法的。
 
 ### init
 

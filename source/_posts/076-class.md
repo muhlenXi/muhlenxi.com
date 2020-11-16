@@ -41,7 +41,7 @@ struct objc_class : objc_object {
 }
 ```
 
-这个是 `类` 在底层的实现，它继承于 objc_object，所以 objc_class 也是一个对象，被称为类对象。我们常用的 Class 就是 objc_class 的 typedef。
+这个是 `类` 在底层的实现，它继承于 `objc_object`，所以 `objc_class` 也是一个对象，被称为类对象。我们常用的 Class 就是 `objc_class` 的 typedef。
 
 ```c
 typedef struct objc_class *Class;
@@ -49,7 +49,7 @@ typedef struct objc_class *Class;
 
 ## 探究 『继承』
 
-在 objc_class 中有个属性 superclass, 我们先探究下 superclass 的继承体系。
+在 `objc_class` 中有个属性 `superclass`, 我们先探究下 `superclass` 的继承体系。
 
 如下，我们分别定义了两个类，RDPerson 继承于 NSObject，RDTeacher 继承于 RDPerson 。
 
@@ -66,9 +66,9 @@ typedef struct objc_class *Class;
 ```objc
 @interface RDTeacher : RDPerson
 
-@property (nonatomic,copy) NSString * name;
-@property (nonatomic,copy) NSString * hobby;
-@property (nonatomic,copy) NSString * address;
+@property (nonatomic, copy) NSString * name;
+@property (nonatomic, copy) NSString * hobby;
+@property (nonatomic, copy) NSString * address;
 
 + (void)sayStandUp;
 - (void)sayByebye;
@@ -88,27 +88,27 @@ typedef struct objc_class *Class;
 @end
 ```
 
-如图，我们实例化一个对象，在 NSLog 的地方打个断点，在 Debug area 中就可以使用 lldb 指令进行探索了。
+如图，我们实例化一个对象，在 NSLog 的地方打个断点，在 `Debug area` 中就可以使用 `lldb` 指令进行探索了。
 
 ![](https://raw.githubusercontent.com/muhlenxi/blog-images/master/imgclass.png)
 
-使用 `x/8gx` 查看当前对象地址开始的 8 个 8 字节的数据。 对象 t 首地址中存储的是isa，后面的依次是对象的每个属性。看看是否是我们设置的数据。
+使用 `x/8gx` 查看当前对象地址开始的 8 个 8 字节的数据。 对象 t 首地址中存储的是 isa，后面的依次是对象的每个属性。看看是否是我们设置的数据。
 
 ```c
 (lldb) po 0x001d800100003465 & 0x00007ffffffffff8ULL
 RDTeacher
 
-(lldb) po 0x0000000100002058
+(lldb) po 0x0000000100002058  // name
 Lucy
 
-(lldb) po 0x0000000100002078
+(lldb) po 0x0000000100002078  // hobby
 Men
 
-(lldb) po 0x0000000100002098
+(lldb) po 0x0000000100002098  // address
 Earth
 ```
 
-接下来探索 isa 中的类对象的信息。用 `p/x` 打印出当前对象归属的 RDTeacher 类的地址 A（16进制）, 也就是当前对象中的 isa 中 shiftcls 的数据。
+接下来探索 isa 中的类对象的信息。用 `p/x` 打印出当前对象归属的 `RDTeacher` 类的地址 A（16进制）, 也就是当前对象中的 `isa` 中 `shiftcls` 的数据。
 
 ```c
 (lldb) p/x 0x001d800100003465 & 0x00007ffffffffff8ULL
@@ -129,7 +129,7 @@ RDTeacher
 RDPerson
 ```
 
-可以看出 RDTeacher 的父类是 RDPerson，它的地址是 `0x0000000100003500` 。用 `x/4gx` 读取地址 `0x0000000100003500` 中的内容，然后打印 RDPerson 的 superclass。
+可以看出 RDTeacher 的父类是 RDPerson，它的地址是 `0x0000000100003500` 。用 `x/4gx` 读取地址 `0x0000000100003500` 中的内容，然后打印 `RDPerson` 的 `superclass`。
 
 ```c
 (lldb) x/4gx 0x0000000100003500
@@ -140,7 +140,7 @@ RDPerson
 NSObject
 ```
 
-可以看出 RDPerson 的父类是 NSObject ，它的地址是 `0x00000001003f1140`。 用 `x/4gx` 读取 `0x00000001003f1140` 中的内容，然后打印 NSObject 的 superclass。
+可以看出 RDPerson 的父类是 `NSObject` ，它的地址是 `0x00000001003f1140`。 用 `x/4gx` 读取 `0x00000001003f1140` 中的内容，然后打印 `NSObject` 的 `superclass`。
 
 ```c
 (lldb) x/4gx  0x00000001003f1140
@@ -150,7 +150,7 @@ NSObject
 (lldb) po 0x0000000000000000
 <nil>
 ```
-可以看出 NSObject 的父类是 `nil`。
+可以看出 `NSObject` 的父类是 `nil`。
 
 所以我们可以得出 RDTeacher 的继承关系。
 
@@ -169,7 +169,7 @@ NSObject
 0x101612270: 0x0000000100002078 0x0000000100002098
 ```
 
-接下来探索对象 t 的 isa 指向的是啥？首先用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出 isa 中的 shiftcls。然后用 po 打印 shiftcls 的内容。
+接下来探索对象 t 的 isa 指向的是啥？首先用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出 isa 中的 `shiftcls`。然后用 `po` 打印 `shiftcls` 的内容。
 
 ```
 (lldb) p/x 0x001d800100003465 & 0x00007ffffffffff8ULL
@@ -179,9 +179,9 @@ NSObject
 RDTeacher
 ```
 
-所以对象 t 的 isa 指向的类是 RDTeacher 类。接下来我们探索 RDTeacher 的 isa 指向的是啥。
+所以对象 t 的 `isa` 指向的类是 `RDTeacher` 类。接下来我们探索 `RDTeacher` 的 `isa` 指向的是啥。
 
-先用 `x/4gx` 读出内存 `0x0000000100003460` 内容，然后用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出 RDTeacher 类对象所属的类的地址。
+先用 `x/4gx` 读出内存 `0x0000000100003460` 内容，然后用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出 `RDTeacher` 类对象所属的类的地址。
 
 最后用 `x/4gx` 读取这个地址中的内容，用 po 打印当前 isa 中的类。类对象所属的类称为 `元类`（meta class）。
 
@@ -190,9 +190,6 @@ RDTeacher
 0x100003460: 0x0000000100003438 0x0000000100003500
 0x100003470: 0x0000000100668c20 0x0004802c0000000f
 
-(lldb) po 0x0000000100003500  // RDTeacher 的父类
-RDPerson
-
 (lldb) p/x 0x0000000100003438 & 0x00007ffffffffff8ULL
 (unsigned long long) $107 = 0x0000000100003438
 
@@ -200,7 +197,7 @@ RDPerson
 RDTeacher
 ```
 
-我们直接打印 RDTeacher 的元类的地址，看是否等于上面输出的 `0x0000000100003438`。
+我们通过 `object_getClass` 方法直接打印 `RDTeacher` 的元类的地址，看是否等于上面输出的 `0x0000000100003438`。
 
 ```c
 (lldb) p/x object_getClass(RDTeacher.class)
@@ -209,7 +206,7 @@ RDTeacher
 
 可以看出他们是相等的。也就是说我们得到了类对象的元类。
 
-继续探索 `元类 RDTeacher` 的 isa，看它指向了啥。用 `x/4gx` 读取这个地址中的内容。然后用 `p/x` 和 `po` 打印元类的 isa 指向的类的信息。
+继续探索 `元类 RDTeacher` 的 `isa`，看它指向了啥。用 `x/4gx` 读取这个地址中的内容。然后用 `p/x` 和 `po` 打印元类的 `isa` 指向的类的信息。
 
 ```c
 (lldb) x/4gx 0x0000000100003438
@@ -223,23 +220,23 @@ RDTeacher
 NSObject
 ```
 
-我们得到的这 NSObject 是我们常用的那个 NSObject 么？也就是所有对象的根类。用 `p/x` 打印下类对象 NSObject 的地址。
+我们得到的这 `NSObject` 是我们常用的那个 `NSObject` 么？也就是所有对象的根类。用 `p/x` 打印下类对象 NSObject 的地址。
 
 ```c
 (lldb) p/x [NSObject class]
 (Class) $115 = 0x00000001003f1140 NSObject
 ```
 
-这和 `0x00000001003f10f0` 是不相等的，我们再打印下 NSObject 类对象的元类的地址。
+这和 `0x00000001003f10f0` 是不相等的，我们再打印下 `NSObject` 类对象的元类的地址。
 
 ```c
 (lldb) p/x object_getClass(NSObject.class)
 (Class) $116 = 0x00000001003f10f0
 ```
 
-此时得到的这个值是和 `0x00000001003f10f0` 是相等的。说明 `元类 RDTeacher` 的 isa 指向的是 NSObject 的元类，这个元类称之为根元类（root meta class）。
+此时得到的这个值是和 `0x00000001003f10f0` 是相等的。说明 `元类 RDTeacher` 的 `isa` 指向的是 `NSObject` 的元类，这个元类称之为根元类（root meta class）。
 
-最后我们看看根元类的 superclass 和 isa 指向哪里？用 `x/4gx` 查看下 `0x00000001003f10f0` 地址的内容。
+最后我们看看根元类的 `superclass` 和 `isa` 指向哪里？用 `x/4gx` 查看下 `0x00000001003f10f0` 地址的内容。
 
 ```c
 (lldb) x/4gx 0x00000001003f10f0
@@ -247,16 +244,16 @@ NSObject
 0x1003f1100: 0x0000000101018bd0 0x0005e03100000007
 ```
 
-我们先看看 NSObject 根元类的 superclass 是啥？
+我们先看看 NSObject 根元类的 `superclass` 是啥？
 
 ```
 (lldb) po 0x00000001003f1140
 NSObject
 ```
 
-这个 NSObject 的地址和我们之前的 NSObject 的类对象的地址一样的，都是 `0x00000001003f1140`, 所以根元类的父类是 NSObject 根类。
+这个 `NSObject` 的地址和我们之前的 NSObject 的类对象的地址一样的，都是 `0x00000001003f1140`, 所以根元类的父类是 NSObject 根类。
 
-再看一下根元类的 isa 指向啥？用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出根源类所属的类的 isa。
+再看一下根元类的 `isa` 指向啥？用 `p/x` 和 `0x00007ffffffffff8ULL` mask 出根元类所属的类的 isa。
 
 ```
 (lldb) p/x 0x00000001003f10f0 & 0x00007ffffffffff8ULL
@@ -284,9 +281,9 @@ class 中的属性和方法存储在什么地方呢？先回到源码中 `objc_c
 // objc_class 定义
 struct objc_class : objc_object {
     Class superclass;
-    cache_t cache;             // formerly cache pointer and vtable
-    class_data_bits_t bits;    // class_rw_t * plus custom rr/alloc flags
-
+    cache_t cache;  
+    class_data_bits_t bits; 
+    
     class_rw_t *data() const {
         return bits.data();
     }
@@ -300,11 +297,10 @@ struct objc_class : objc_object {
 
 ### class_rw_t
 
-根据上面的源代码，可以推测 class 的方法和属性应该是在 bits 中，通过 `data()` 方法可以获取到 bits 中的数据，这个方法的返回值是 `class_rw_t` 类型的指针。 跳入 `class_rw_t` 的声明中看看这个是啥。
+根据上面的源代码，可以推测 `class` 的方法和属性应该是在 bits 中，通过 `data()` 方法可以获取到 bits 中的数据，这个方法的返回值是 `class_rw_t` 类型的指针。 跳入 `class_rw_t` 的声明中看看这个是啥。
 
 ```c
 struct class_rw_t {
-    // Be warned that Symbolication knows the layout of this structure.
     uint32_t flags;
     uint16_t witness;
 #if SUPPORT_INDEXED_ISA
@@ -357,7 +353,7 @@ private:
 - `properties()` 用于获取属性列表，它的返回值是 `property_array_t`。
 - `protocols()` 用于获取协议列表，它的返回值是 `protocol_array_t`。
 
-接下来，我们分别看这个三个 array_t 中的元素是什么。
+接下来，我们分别看这三个 array_t 中的元素是什么。
 
 #### method_array_t
 
@@ -412,7 +408,16 @@ struct method_list_t : entsize_list_tt<method_t, method_list_t, 0x3> {
 };
 ```
 
-entsize_list_tt 这是个什么类型呢？看一看它是怎么定义的。
+`method_array_t` 继承于 `list_array_tt`, `list_array_tt` 是一个类模板，它的声明如下：
+
+```c
+template <typename Element, typename List>
+class list_array_tt {
+    // 源码太多，未粘贴
+}
+```
+
+`entsize_list_tt` 这是个什么类型呢？看一看它是怎么定义的。
 
 ```c
 template <typename Element, typename List, uint32_t FlagMask>
@@ -508,7 +513,7 @@ struct protocol_list_t {
 
 ![](https://raw.githubusercontent.com/muhlenxi/blog-images/master/imgobjcClassMindnode.png)
 
-现在我们用 lldb 调试的方式，验证下 RDTeacher 类中的属性和方法的存储位置。让代码运行到图一的那个断点处。首先找到类对象的地址。
+现在我们用 `lldb` 调试的方式，验证下 RDTeacher 类中的属性和方法的存储位置。让代码运行到图一的那个断点处。首先找到类对象的地址。
 
 ```c
 (lldb) p/x [RDTeacher class]
@@ -525,9 +530,9 @@ struct protocol_list_t {
 0x100003520: 0x00000001003350f0 0x000000010032f410
  ```
 
-第一个 8 字节数据 `0x00000001000034c8` 是 isa，第二个 8 字节数据是 superclass，第三个数据存储的是 cache, `cache_t` 是一个 struct，通过对 struct 中属性的分析，可以得出 cache 占用 16 个字节大小。所以地址 `0x100003500` 起始的 16 个字节中存储的 cache。
+第一个 8 字节数据 `0x00000001000034c8` 是 `isa`，第二个 8 字节数据是 `superclass`，第三个数据存储的是 `cache`, `cache_t` 是一个 struct，通过对 struct 中属性的分析，可以得出 `cache` 占用 16 个字节大小。所以地址 `0x100003500` 起始的 16 个字节中存储的 cache。
 
-第四个数据是 bits，它的类型是 `class_data_bits_t`，`class_data_bits_t` 是一个 struct，其内部只有一个 uintptr_t 类型的 bits 数据，所以 bits 占用 8 个字节大小。所以地址 `0x100003510` 起始的 8 个字节中存储的是 bits 数据。
+第四个数据是 bits，它的类型是 `class_data_bits_t`，`class_data_bits_t` 是一个 struct，其内部只有一个 `uintptr_t` 类型的 bits 数据，所以 bits 占用 8 个字节大小。所以地址 `0x100003510` 起始的 8 个字节中存储的是 bits 数据。
 
 用 `p/x` 打印出 bits 数据的地址。
 
@@ -588,7 +593,7 @@ struct protocol_list_t {
 Assertion failed: (i < count), function get, file /Users/muhlenxi/xiyinjun/objc-runtime/objc4-781/runtime/objc-runtime-new.h, line 438.
 ```
 
-当我们取第四个属性的时候，发生了数组越界操作，崩溃了。因为 RDTeacher 中一共定义了 3 个 属性。
+当我们取第 4 个属性的时候，发生了数组越界操作，崩溃了。因为 `RDTeacher` 中一共定义了 3 个属性。
 
 调用 `class_rw_t` 中的 `methods()` 方法得到方法列表。
 
