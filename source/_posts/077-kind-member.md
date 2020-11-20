@@ -103,7 +103,7 @@ objc_opt_class(id obj)
 
 可以看出，在 \_\_OBJC2__ 中主要是通过 `getIsa()` 获取对象所属的 `class`，然后根据所属 `cls` 是否是 `meta class` 返回不同的 `class`。 如果是元类，则返回类对象本身，否则返回该对象所属的类。
 
-为什么要这么设计呢？当你看到本文最后的 isa 走向图，你就会恍然大悟的，暂时先记着这个逻辑。
+为什么要这么设计呢？当你看到本文最后的 `isa` 走向图，你就会恍然大悟的，暂时先记着这个逻辑。
 
 ### class_getInstanceMethod
 
@@ -177,7 +177,7 @@ getMethod_nolock(Class cls, SEL sel)
 }
 ```
 
-这个方法是在所属类的 superclass 继承链上循环调用 `getMethodNoSuper_nolock` 方法查找 method。
+这个方法是在所属类的 `superclass` 继承链上循环调用 `getMethodNoSuper_nolock` 方法查找 method。
 
 该方法的实现如下，关于方法查找的细节流程，在后续的文章会有介绍，这里就不深入了。
 
@@ -223,7 +223,7 @@ Class getMeta() {
 }
 ```
 
-**如果类是元类返回本身，否则返回所属的类。** 根据这个逻辑，对类对象和该对象所属的元类查找相同的类方法，底层调用逻辑是一样的，都是在元类中查找对象方法。 所以 method3 也能找到类方法的原因水落石出了。
+**如果类对象所属类是元类返回本身，否则返回所属的类。** 根据这个逻辑，对类对象和该对象所属的元类查找相同的类方法，底层调用逻辑是一样的，都是在元类中查找对象方法。 所以 method3 也能找到类方法的原因水落石出了。
 
 ### isKindOfClass
 
@@ -265,11 +265,11 @@ void testKindOf() {
 
 以上的代码的打印结果是 `1 0 1  1`, 为什么会是这个结果呢？请看下面的分析：
 
-- 对于 res0，`[NSObject class]` 得到的是 `NSObject 类`，类对象 `getIsa` 得到的是 `NSObject 根元类`，根元类的 `superclass` 是 `NSObject 类`，在根元类的 superclass 继承链上可以找到 `NSObject 类`。 所以得到的结果是 **1**。
-- 对于 res1，`[RDTeacher class]` 得到的是 `RDTeacher 类`，类对象 `getIsa` 得到的是 `RDTeacher 根元类`，在 `RDTeacher 根元类`的 superclass 继承链上找不到 `RDTeacher 类`。所以得到的结果是 **0**。
+- 对于 res0，`[NSObject class]` 得到的是 `NSObject 类`，类对象 `getIsa` 得到的是 `NSObject 根元类`，根元类的 `superclass` 是 `NSObject 类`，在根元类的 `superclass` 继承链上可以找到 `NSObject 类`。 所以得到的结果是 **1**。
+- 对于 res1，`[RDTeacher class]` 得到的是 `RDTeacher 类`，类对象 `getIsa` 得到的是 `RDTeacher 根元类`，在 `RDTeacher 根元类`的 `superclass` 继承链上找不到 `RDTeacher 类`。所以得到的结果是 **0**。
 
-- 对于 res3，`[NSObject alloc]` 得到的是 `NSObject 对象`，对象 `getIsa` 得到的是 `NSObject 类`，`NSObject 类`的 superclass 继承链上可以找到 `NSObject 类`。 所以得到的结果是 **1**。
-- 对于 res4，`[RDTeacher alloc]` 得到的是 `RDTeacher 对象`，对象 `getIsa` 得到的是 `RDTeacher 类`，在 `RDTeacher 类`的 superclass 继承链上可以找到 `RDTeacher 类`。所以得到的结果是 **1**。
+- 对于 res3，`[NSObject alloc]` 得到的是 `NSObject 对象`，对象 `getIsa` 得到的是 `NSObject 类`，`NSObject 类`的 `superclass` 继承链上可以找到 `NSObject 类`。 所以得到的结果是 **1**。
+- 对于 res4，`[RDTeacher alloc]` 得到的是 `RDTeacher 对象`，对象 `getIsa` 得到的是 `RDTeacher 类`，在 `RDTeacher 类`的 `superclass` 继承链上可以找到 `RDTeacher 类`。所以得到的结果是 **1**。
 
 ### isMemberOfClass
 
@@ -320,9 +320,9 @@ void testMemberOf() {
 
 ### 总结
 
-- `isKindOfClass` 是在对象所属的类的 superclass 继承链上寻找是否有 class 等于给定的 class。**这里要注意的是，对象和类对象调用 `class` 方法得到的都是 「类对象」。**
+- `isKindOfClass` 是在对象所属的类的 `superclass` 继承链上寻找是否有 class 等于给定的 class。**这里要注意的是，对象和类对象调用 `class` 方法得到的都是 「类对象」。**
 - `isMemberOfClass` 是判断对象所属的类是否等于给定的 class。
-- `class_getClassMethod` 方法，是通过调用 `class_getInstanceMethod` 方法实现的，只不过传的参数的类对象所属的元类而已。
+- `class_getClassMethod` 方法，是通过调用 `class_getInstanceMethod` 方法实现的，只不过传的参数是类对象所属的元类而已。
 
 ### 后记
 
