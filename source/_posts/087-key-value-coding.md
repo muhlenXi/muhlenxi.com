@@ -246,3 +246,7 @@ NSString *readName = [person valueForKey:@"name"];
 ## 后记
 
 我是穆哥，卖码维生的一朵浪花。我们下期见。
+
+## 参考资料
+
+- [1、Key-Value Coding Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/KeyValueCoding/index.html)
