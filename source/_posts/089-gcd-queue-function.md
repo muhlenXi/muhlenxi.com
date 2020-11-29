@@ -13,7 +13,7 @@ categories:
 
 ## GCD 简介
 
-`GCD` 是 `Grand Central Dispatch` 的缩写，是 Apple 提供的一套多线程编程工具，我们可以通过 GCD 同步或异步地执行 Block 中的代码块。gcd 是使用 `C` 语言编写的。
+`GCD` 是 `Grand Central Dispatch` 的缩写，是 Apple 提供的一套多线程编程工具，我们可以通过 GCD 同步或异步地执行 Block 中的代码块。GCD 是使用 `C` 语言编写的。
 
 使用 GCD 我们不需要关心线程的创建和状态维护，只需要创建合适的队列（Queue），或者使用系统提供的全局队列，然后将要执行的任务以同步或异步的方式添加到队列中即可。
 
@@ -62,7 +62,7 @@ dispatch_queue_t concurrent = dispatch_queue_create("my concurrent queue", DISPA
 
 我们可以将要执行的代码以 Block 的方式封装，然后将这个 block 添加到队列中，添加方式有同步和异步，这是怎么确定的呢？
 
-```
+```objc
 // 同步添加
 dispatch_sync(concurrent, ^{
     // do something

@@ -280,11 +280,11 @@ void initializeMainExecutable()
 }
 ```
 
-8、因为主执行程序是以 `ASLR` 的方式加载进内存的，所有需要 link 和 rebase，以修复内部地址的偏移。
+8、因为主执行程序是以 `ASLR` (Address space layout randomization) 的方式加载进内存的，所有需要 `link` 和 `rebase`，以修复内部地址的偏移。
 
 9、所有插入的动态库的链接是调用 `link` 方法来完成的。
 
-10、所有插入的动态库的 bind 是调用 image 的 `recursiveBind` 方法来完成的。
+10、所有插入的动态库的 `bind` 是调用 image 的 `recursiveBind` 方法来完成的。
 
 11、主执行程序的初始化是通过 `runInitializers` 来完成的，究竟要对哪些东西初始化呢，我们来探索下。
 

@@ -46,7 +46,7 @@ void _objc_init(void)
 }
 ```
 
-在这个初始化方法中，通过全局变量保证该方法只会被调用一次。然后调用了 `环境变量`、`pthred`、`c++ 静态方法`、`runtime`、`异常`、`缓存`等初始化方法。其中 `_imp_implementationWithBlock_init` 仅仅在 `TARGET_OS_OSX` 平台才有用。
+在这个初始化方法中，通过全局变量保证该方法只会被调用一次。然后调用了 `环境变量`、`pthread`、`c++ 静态方法`、`runtime`、`异常`、`缓存` 等初始化方法。其中 `_imp_implementationWithBlock_init` 仅仅在 `TARGET_OS_OSX` 平台才有用。
 这个方法中还有一个值得注意的地方就是调用了 `_dyld_objc_notify_register` 方法来注册通知。
 
 在前篇文章中，我们知道 `_dyld_objc_notify_register` 是在 `dyld` 中实现的。
