@@ -49,6 +49,19 @@ void _objc_init(void)
 在这个初始化方法中，通过全局变量保证该方法只会被调用一次。然后调用了 `环境变量`、`pthread`、`c++ 静态方法`、`runtime`、`异常`、`缓存` 等初始化方法。其中 `_imp_implementationWithBlock_init` 仅仅在 `TARGET_OS_OSX` 平台才有用。
 这个方法中还有一个值得注意的地方就是调用了 `_dyld_objc_notify_register` 方法来注册通知。
 
+`environ_init` 方法主要是读取项目中配置的环境变量。具体可以配置哪些环境变量 [环境变量列表](https://gist.github.com/muhlenXi/62900a8c472446b59eb186c80bd1d92e)。在终端中用 `export OBJC_HELP=1` 命令也可以查看。
+
+`exception_init` 方法主要是异常机制的初始化。如果我们想要在异常抛出之前，调用我们自己的异常处理函数。我们可以通过 `NSSetUncaughtExceptionHandler` 来设置异常处理 handler。
+
+```objc
+static void uncaughtExceptionHandler(id exception) {
+    NSLog(@"crash 异常处理： %@", exception);
+}
+
+// 设置异常 handler
+NSSetUncaughtExceptionHandler(uncaughtExceptionHandler);
+```
+
 在前篇文章中，我们知道 `_dyld_objc_notify_register` 是在 `dyld` 中实现的。
 
 ```c
@@ -92,13 +105,13 @@ void registerObjCNotifiers(_dyld_objc_notify_mapped mapped, _dyld_objc_notify_in
 
 通过上述三个方法，可以得到一下关系：
 
-- 变量 sNotifyObjCMapped 的值是 map_images
-- 变量 sNotifyObjCInit 的值是 load_images
-- 变量 sNotifyObjCUnmapped 的值是 unmap_image
+- 变量 `sNotifyObjCMapped` 的值是 map_images
+- 变量 `sNotifyObjCInit` 的值是 load_images
+- 变量 `sNotifyObjCUnmapped` 的值是 unmap_image
 
-`doInitialization` 方法会间接调用 `registerObjCNotifiers` 方法，`registerObjCNotifiers` 方法中会调用 `notifyBatchPartial` 方法，在 `notifyBatchPartial` 实现中，我们发现了 sNotifyObjCMapped 会被调用，从而调用了 `map_images` 方法。
+`doInitialization` 方法会间接调用 `registerObjCNotifiers` 方法，`registerObjCNotifiers` 方法中会调用 `notifyBatchPartial` 方法，在 `notifyBatchPartial` 实现中，我们发现了 `sNotifyObjCMapped` 会被调用，从而调用了 `map_images` 方法。
 
-当 `doInitialization` 方法执行完毕后，会接着调用 `notifySingle` 方法，在 `notifySingle` 的实现中，sNotifyObjCInit 会被调用，从而调用了 `load_images` 方法。因此 `map_images` 会在 `load_images` 之前执行。
+当 `doInitialization` 方法执行完毕后，会接着调用 `notifySingle` 方法，在 `notifySingle` 的实现中，`sNotifyObjCInit` 会被调用，从而调用了 `load_images` 方法。因此 `map_images` 会在 `load_images` 之前执行。
 
 `sNotifyObjCUnmapped` 是在 `void removeImage(ImageLoader* image)` 方法中调用的, 也就是说 `unmap_image` 在这个方法中调用的。
 
@@ -108,7 +121,9 @@ void registerObjCNotifiers(_dyld_objc_notify_mapped mapped, _dyld_objc_notify_in
 
 ## map_images
 
-下面我们看 `map_images` 方法中做了哪些事情。
+`map_images` 方法主要是处理 dyld map 后的 image。下面我们看 `map_images` 方法中做了哪些事情？
+
+我们可以通过 `command+option+⬅️` 折叠代码来厘清代码行数比较多的函数逻辑。
 
 ```c
 void
