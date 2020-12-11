@@ -112,15 +112,29 @@ self.timer = [NSTimer timerWithTimeInterval:1.0 target:weakSelf selector:@select
 
 ## 解决方案
 
+下面总共有 5 种方案来解决上述问题，完整的 demo 见 [ExNSTimer](https://github.com/muhlenXi-Team/NSTimerDemo)。
+
+### Block
+
+第 1 种方案是使用 `block` 来包装要执行的任务。这里要注意 block 中要使用 `weakSelf`。
+
+```objc
+__weak typeof(self)  weakSelf = self;
+self.timer = [NSTimer timerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
+    [weakSelf fire];
+}];
+```
+
+
 ### viewWillDisappear
 
-第一种方案是，在 `ViewController` 的 `viewWillDisappear` 方法中，调用 timer 的 `invalidate` 方法和设置为 nil。
+第 2 种方案是，在 `ViewController` 的 `viewWillDisappear` 方法中，调用 timer 的 `invalidate` 方法和设置为 nil。
 
 这种情况下，如果你再 push 到另一个控制器时，`AViewController` 仍然在导航栏的栈中，这时候 timer 已经被销毁了。显然这种方案是不完美的。
 
 ### didMoveToParentViewController
 
-第二种方案是，重写 `didMoveToParentViewController` 的方法，在这个方法中，条件调用 timer 的 `invalidate` 方法和设置为 nil。`didMoveToParentViewController` 在如下情况会被调用：
+第 3 种方案是，重写 `didMoveToParentViewController` 的方法，在这个方法中，条件调用 timer 的 `invalidate` 方法和设置为 nil。`didMoveToParentViewController` 在如下情况会被调用：
 
 > Called after the view controller is added or removed from a container view controller.
 
@@ -137,16 +151,68 @@ self.timer = [NSTimer timerWithTimeInterval:1.0 target:weakSelf selector:@select
 
 ### 自定义封装 MLXTimerWrapper 
 
-方案三的思路是：
+方案 4 的思路是：
 
 - 在 MLXTimer 中持有一个 target 控制器，让 timer 持有的 target 是自己本身。
 - 在每次定时器事件触发的时候，先判断 taget 控制是是否还存在。也就是是否是 `nil`。
     - 存在的话，转发消息给 target 控制器。触发 target 控制器中的方法。
     - 不存在的话，调用 timer 的 `invalidate` 方法和设置为 nil。
 
+
+关键代码：
+
+```objc
+- (instancetype)initWithTimeInterval:(NSTimeInterval)ti target:(id)aTarget selector:(SEL)aSelector userInfo:(id)userInfo repeats:(BOOL)yesOrNo {
+    if (self = [super init]) {
+        self.target = aTarget;
+        self.selector = aSelector;
+        
+        if ([self.target respondsToSelector:self.selector]) {
+            Method method = class_getInstanceMethod([self.target class], self.selector);
+            const char *type = method_getTypeEncoding(method);
+            /// time wrapper 添加方法
+            class_addMethod([self class], aSelector, (IMP)fire, type);
+            /// 启动 timer
+            self.timer = [NSTimer scheduledTimerWithTimeInterval:ti target:self selector:aSelector userInfo:userInfo repeats:yesOrNo];
+        }
+    }
+    return self;
+}
+
+- (void)invalidate {
+    [self.timer invalidate];
+    self.timer = nil;
+}
+
+void fire(MLXTimerWrapper *timerWrapper) {
+    if (timerWrapper.target) {
+        // 转发消息给 target (控制器)
+        if ([timerWrapper.target respondsToSelector:timerWrapper.selector]) {
+            [timerWrapper.target performSelector:timerWrapper.selector];
+        }
+    } else {
+        [timerWrapper invalidate];
+    }
+}
+```
+
+使用方式：
+
+```objc
+self.timeWrapper = [[MLXTimerWrapper alloc] initWithTimeInterval:1.0 target:self selector:@selector(fire) userInfo:Nil repeats:YES];
+```
+
+```objc
+- (void)dealloc
+{
+    NSLog(@"AViewController dealloc");
+    [self.timeWrapper invalidate];
+}
+```
+
 ### 中介者模式 NSProxy
 
-方案三的思路是，让 timer 持有的 target 不是当前 `AViewController`, 而是一个中间对象。这样 `AViewController` pop 的时候，就可以被销毁了，也就是 dealloc 会被调用了。在 dealloc 中，我们就可以调用 timer 的 `invalidate` 方法和设置为 nil，从而打破循环引用。
+方案 5 的思路是，让 timer 持有的 target 不是当前 `AViewController`, 而是一个中间对象。这样 `AViewController` pop 的时候，就可以被销毁了，也就是 dealloc 会被调用了。在 dealloc 中，我们就可以调用 timer 的 `invalidate` 方法和设置为 nil，从而打破循环引用。
 
 中间者的作用是被 timer 持有，然后将 timer 产生的定时器事件 ，转发给`AViewController`, 从而触发 `fire` 方法。
 
@@ -211,6 +277,12 @@ self.timer = [NSTimer timerWithTimeInterval:1.0 target:self.proxy selector:@sele
        
 [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
 ```
+
+timer 的分析到这里就结束了，你可以使用以上 5 种方案来避免引用循环。
+
+## 后记
+
+我是穆哥，卖码维生的一朵浪花。我们下次见。
 
 ## 参考资料
 
