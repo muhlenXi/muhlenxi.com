@@ -110,6 +110,10 @@ git clone --branch swift-5.3.1-RELEASE https://github.com/apple/swift.git
 
 `Command + shift + D` 切换到 `Run` 后，点击左上秒的 `Debug` 按钮即可。
 
+## 后记
+
+我是卖码维生的「穆哥」。我们下次见。
+
 ## 参考资料
 
 - [apple/swift](https://github.com/apple/swift)
