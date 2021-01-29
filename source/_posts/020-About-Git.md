@@ -105,6 +105,8 @@ Unix 的哲学是 『没有消息就是好消息』，没有消息则说明指�
 | git config --global user.email | 设置邮箱 |
 | git config --global core.editor emacs | 设置默认编辑器 |
 | git config --list | 检查配置信息 |
+| git config --global pager.branch false | 关掉分页显示 |
+
 
 *你可以通过输入 `git config <key>` 来检查 Git 的某一项配置。*
 
